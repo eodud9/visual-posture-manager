@@ -1,17 +1,24 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { TodoItem } from "./TodoItem";
+import { createTask, updateTask, deleteTask } from "../api/tasks";
 
 export const Sidebar = () => {
   const [todos, setTodos] = useState([]);
   const [todoInput, setTodoInput] = useState("");
+  const localIdRef = useRef(-1);
 
-  const addTodo = () => {
+  const addTodo = async () => {
     if (!todoInput.trim()) return;
-    setTodos((prev) => [
-      ...prev,
-      { id: Math.random(), title: todoInput.trim(), completed: false },
-    ]);
+    const localId = localIdRef.current--;
+    const title = todoInput.trim();
+
+    setTodos((prev) => [...prev, { id: localId, title, completed: false }]);
     setTodoInput("");
+
+    const res = await createTask(title);
+    if (res?.id != null) {
+      setTodos((prev) => prev.map((t) => (t.id === localId ? { ...t, id: res.id } : t)));
+    }
   };
 
   const toggleTodo = (id) => {
@@ -20,14 +27,18 @@ export const Sidebar = () => {
     );
   };
 
-  const updateTodo = (id, newTitle) => {
+  const updateTodo = async (id, newTitle) => {
     setTodos((prev) =>
       prev.map((todo) => (todo.id === id ? { ...todo, title: newTitle } : todo))
     );
+    if (id > 0) await updateTask(id, newTitle);
   };
 
-  const clearCompleted = () => {
+  const clearCompleted = async () => {
+    const completed = todos.filter((t) => t.completed);
     setTodos((prev) => prev.filter((todo) => !todo.completed));
+    const serverIds = completed.filter((t) => t.id > 0).map((t) => t.id);
+    await Promise.all(serverIds.map((id) => deleteTask(id)));
   };
 
   const hasCompleted = todos.some((todo) => todo.completed);
