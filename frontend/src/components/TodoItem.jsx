@@ -20,14 +20,28 @@ export const TodoItem = ({ todo, toggleTodo, updateTodo }) => {
   };
 
   return (
-    <li className="bg-[#F4F7F9] px-4 py-4 rounded-md font-light text-sm flex gap-2 border border-stone-200 mb-3 items-center">
+    <div style={{ 
+      backgroundColor: todo.completed ? '#F8FAFC' : '#EFF6FF', 
+      color: todo.completed ? '#94A3B8' : '#2563EB', 
+      padding: '12px 16px', 
+      borderRadius: '8px', 
+      fontSize: '13px', 
+      fontWeight: 'bold', 
+      marginBottom: '10px', 
+      display: 'flex', 
+      alignItems: 'center', 
+      gap: '10px',
+      textDecoration: todo.completed ? 'line-through' : 'none',
+      border: '1px solid',
+      borderColor: todo.completed ? '#E2E8F0' : 'transparent'
+    }}>
       <input
         type="checkbox"
-        id={todo.id}
         checked={todo.completed}
-        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 shrink-0"
         onChange={() => toggleTodo(todo.id)}
+        style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#2563EB', flexShrink: 0 }}
       />
+      
       {editing ? (
         <input
           type="text"
@@ -36,24 +50,25 @@ export const TodoItem = ({ todo, toggleTodo, updateTodo }) => {
           onBlur={handleSave}
           onKeyDown={handleKeyDown}
           autoFocus
-          className="flex-1 bg-white border border-stone-300 rounded px-2 py-0.5 outline-none text-sm"
+          style={{ flex: 1, border: 'none', background: 'white', padding: '4px 8px', borderRadius: '4px', outline: '1px solid #2563EB', fontSize: '13px' }}
         />
       ) : (
-        <span className={`flex-1 ${todo.completed ? "line-through text-gray-400" : ""}`}>
+        <span 
+          style={{ flex: 1, cursor: 'pointer', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} 
+          onDoubleClick={() => { setEditValue(todo.title); setEditing(true); }}
+        >
           {todo.title}
         </span>
       )}
+      
       {!editing && (
         <button
-          onClick={() => {
-            setEditValue(todo.title);
-            setEditing(true);
-          }}
-          className="text-gray-400 hover:text-gray-600 text-xs shrink-0"
+          onClick={() => { setEditValue(todo.title); setEditing(true); }}
+          style={{ background: 'none', border: 'none', color: '#94A3B8', fontSize: '12px', cursor: 'pointer', flexShrink: 0 }}
         >
           수정
         </button>
       )}
-    </li>
+    </div>
   );
 };
