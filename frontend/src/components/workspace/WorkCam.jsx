@@ -172,9 +172,9 @@ export const WorkCam = ({ timeLeft, isRunning, setIsRunning, sessionId, calibrat
   const statusText = status === "active" ? "카메라 활성" : status === "error" ? "권한 거부됨" : "시스템 대기 중";
 
   return (
-    <div className="relative bg-white border border-gray-300 p-10 mt-5 rounded-lg shadow-sm flex items-center justify-between">
+    <div className="relative bg-white border border-gray-300 p-3 rounded-lg shadow-sm flex items-center justify-between">
       <div className="flex items-center">
-        <div className="bg-[#0B121B] w-20 h-20 rounded-lg flex items-center justify-center overflow-hidden">
+        <div className="bg-[#0B121B] w-30 h-20 rounded-lg flex items-center justify-center overflow-hidden">
           {status === "active" ? (
             <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
           ) : (
