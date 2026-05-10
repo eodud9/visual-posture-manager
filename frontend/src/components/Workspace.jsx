@@ -22,8 +22,9 @@ export const Workspace = () => {
   }, [calibrationPhase]);
 
   return (
-    <div className="p-10 w-full">
+    <div className="p-4 flex flex-col gap-4">
       <WorkHeader />
+    
       <WorkTimer
         timeLeft={timeLeft}
         setTimeLeft={setTimeLeft}

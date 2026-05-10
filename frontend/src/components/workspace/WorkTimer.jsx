@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { getPomodoroPresets } from "../../api/pomodoro";
 import { startSession, endSession } from "../../api/sessions";
+import { useNavigate } from "react-router-dom";
 
 const DEFAULT_SESSION_COUNTS = [1, 2, 3];
 const DEFAULT_DURATIONS = ["00:05", "25:00", "50:00", "75:00"];
@@ -19,12 +20,17 @@ const parseTime = (timeStr) => {
 };
 
 export const WorkTimer = ({
-  timeLeft, setTimeLeft,
-  isRunning, setIsRunning,
-  sessionId, setSessionId,
-  calibrationPhase, setCalibrationPhase,
+  timeLeft,
+  setTimeLeft,
+  isRunning,
+  setIsRunning,
+  sessionId,
+  setSessionId,
+  calibrationPhase,
+  setCalibrationPhase,
   onStartRequest,
 }) => {
+  const navigate = useNavigate();
   const [sessionCounts, setSessionCounts] = useState(DEFAULT_SESSION_COUNTS);
   const [durations, setDurations] = useState(DEFAULT_DURATIONS);
   const [selectedTime, setSelectedTime] = useState("25:00");
@@ -72,11 +78,13 @@ export const WorkTimer = ({
   useEffect(() => {
     if (calibrationPhase !== "running" || sessionCreatingRef.current) return;
     sessionCreatingRef.current = true;
-    startSession({ session_count: session, duration_minutes: parseTime(selectedTime) / 60 })
-      .then((res) => {
-        if (res?.id) setSessionId(res.id);
-        else sessionCreatingRef.current = false;
-      });
+    startSession({
+      focusMinutes: parseTime(selectedTime) / 60,
+      breakMinutes: 5,
+    }).then((res) => {
+      if (res?.sessionId) setSessionId(res.sessionId);
+      else sessionCreatingRef.current = false;
+    });
   }, [calibrationPhase]);
 
   // 타이머 틱 — isRunning AND calibrationPhase === "running" 일 때만 동작
@@ -153,14 +161,15 @@ export const WorkTimer = ({
           ? "RUNNING"
           : "READY";
 
-  const statusColor = completedSession !== null
-    ? "text-[#2663EB] font-semibold"
-    : allDone || waitingNextSession
-      ? "text-green-500 font-semibold"
-      : "text-gray-500 font-light";
+  const statusColor =
+    completedSession !== null
+      ? "text-[#2663EB] font-semibold"
+      : allDone || waitingNextSession
+        ? "text-green-500 font-semibold"
+        : "text-gray-500 font-light";
 
   return (
-    <div className="bg-white border border-gray-300 p-10 mt-5 rounded-lg shadow-sm flex flex-col items-center">
+    <div className="bg-white border border-gray-300 p-5 rounded-lg shadow-sm flex flex-col items-center">
       <div className="flex gap-1.5 justify-end w-full">
         <select
           name="session"
@@ -183,7 +192,7 @@ export const WorkTimer = ({
         </select>
       </div>
 
-      <div className="flex flex-col items-center py-10">
+      <div className="flex flex-col items-center py-2">
         <p className="font-extrabold text-8xl">{formatTime(timeLeft)}</p>
         <p className={`text-sm mt-5 mb-3 transition-colors duration-300 ${statusColor}`}>{statusLabel}</p>
         <p className="text-gray-500 font-light text-sm">
@@ -193,7 +202,7 @@ export const WorkTimer = ({
 
       {allDone && <p className="text-green-500 text-sm font-medium mb-4">모든 세션이 완료되었습니다!</p>}
 
-      <div>
+      <div className="flex gap-3 items-center">
         <button
           className="bg-[#2663EB] px-5 py-3 rounded-lg w-50 text-white font-bold transition-colors duration-200 hover:bg-blue-700 cursor-pointer"
           onClick={handleStart}
@@ -206,8 +215,17 @@ export const WorkTimer = ({
                 ? "다음 세션 시작"
                 : calibrationPhase === "calibrating"
                   ? "캘리브레이션 중..."
-                  : "집중 시작"}
+                  : "세션 시작"}
         </button>
+
+        {allDone && (
+          <button
+            onClick={() => navigate("/report")}
+            className="bg-[#F8FAFC] px-4 py-3 rounded-lg text-sm font-bold text-[#64748B] hover:bg-gray-100 cursor-pointer"
+          >
+            통계 보기
+          </button>
+        )}
       </div>
     </div>
   );

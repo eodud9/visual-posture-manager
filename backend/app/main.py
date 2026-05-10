@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import Base, engine
 
@@ -26,6 +27,14 @@ app = FastAPI(
     version = "1.0.0"
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://localhost:5174"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # Router 등록
 app.include_router(task.router, prefix = "/api")
@@ -43,3 +52,13 @@ def read_root():
     return {
         "message": "VPM Backend API 서버가 실행 중입니다."
     }
+
+@app.get("/api/pomodoro-presets")
+def get_pomodoro_presets():
+    return [
+        {"sessions": 1, "duration": "25:00"},
+        {"sessions": 2, "duration": "25:00"},
+        {"sessions": 3, "duration": "25:00"},
+        {"sessions": 1, "duration": "50:00"},
+        {"sessions": 2, "duration": "50:00"},
+    ]

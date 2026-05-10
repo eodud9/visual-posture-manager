@@ -1,17 +1,25 @@
-import { Header } from "./components/Header";
-import { Sidebar } from "./components/Sidebar";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Layout from "./components/Layout";
+import Report from './components/Report';
+import Guide from './components/Guide';
 import { Workspace } from "./components/Workspace";
+import Home from "./components/Home"; 
+
 import "./index.css";
 
 function App() {
   return (
-    <div className="bg-[#F9FAFC] min-h-screen">
-      <Header />
-      <main className="flex">
-        <Sidebar />
-        <Workspace />
-      </main>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+
+        <Route element={<Layout />}>
+          <Route path="/guide" element={<Guide />} />
+          <Route path="/workspace" element={<Workspace />} />
+          <Route path="/report" element={<Report />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }
 

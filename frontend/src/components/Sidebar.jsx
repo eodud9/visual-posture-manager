@@ -1,10 +1,19 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { TodoItem } from "./TodoItem";
-import { createTask, updateTask, deleteTask } from "../api/tasks";
+import { createTask, updateTask, deleteTask, getTasks } from "../api/tasks";
 
 export const Sidebar = () => {
   const [todos, setTodos] = useState([]);
   const [todoInput, setTodoInput] = useState("");
+
+  useEffect(() => {
+    getTasks().then((data) => {
+      if (Array.isArray(data)) {
+        setTodos(data.map((t) => ({ id: t.taskId, title: t.title, completed: false })));
+      }
+    });
+  }, []);
+
   const localIdRef = useRef(-1);
 
   const addTodo = async () => {
@@ -16,21 +25,17 @@ export const Sidebar = () => {
     setTodoInput("");
 
     const res = await createTask(title);
-    if (res?.id != null) {
-      setTodos((prev) => prev.map((t) => (t.id === localId ? { ...t, id: res.id } : t)));
+    if (res.taskId != null) {
+      setTodos((prev) => prev.map((t) => (t.id === localId ? { ...t, id: res.taskId } : t)));
     }
   };
 
   const toggleTodo = (id) => {
-    setTodos((prev) =>
-      prev.map((todo) => (todo.id === id ? { ...todo, completed: !todo.completed } : todo))
-    );
+    setTodos((prev) => prev.map((todo) => (todo.id === id ? { ...todo, completed: !todo.completed } : todo)));
   };
 
   const updateTodo = async (id, newTitle) => {
-    setTodos((prev) =>
-      prev.map((todo) => (todo.id === id ? { ...todo, title: newTitle } : todo))
-    );
+    setTodos((prev) => prev.map((todo) => (todo.id === id ? { ...todo, title: newTitle } : todo)));
     if (id > 0) await updateTask(id, newTitle);
   };
 
@@ -44,31 +49,84 @@ export const Sidebar = () => {
   const hasCompleted = todos.some((todo) => todo.completed);
 
   return (
-    <aside className="bg-white px-4 py-8 border-r border-gray-300 w-80 min-h-full shrink-0">
-      <h2 className="mb-5 border-l-3 border-[#2663EB] pl-2 font-bold">TODAY'S TASKS</h2>
-      <ul>
-        {todos.map((todo) => (
-          <TodoItem key={todo.id} todo={todo} toggleTodo={toggleTodo} updateTodo={updateTodo} />
-        ))}
-      </ul>
+    <aside
+      style={{
+        width: "280px",
+        backgroundColor: "white",
+        borderRadius: "16px",
+        padding: "25px",
+        boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)",
+        border: "1px solid #F3F4F6",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "20px" }}>
+        <div style={{ width: "4px", height: "16px", backgroundColor: "#2563EB", borderRadius: "2px" }}></div>
+        <h2 style={{ fontSize: "16px", fontWeight: "900", margin: 0 }}>TODAY TASKS</h2>
+      </div>
+
+      <div style={{ flex: 1, overflowY: "auto", marginBottom: "10px" }}>
+        {todos.length === 0 ? (
+          <div style={{ fontSize: "13px", color: "#94A3B8", textAlign: "center", marginTop: "20px" }}>
+            할 일이 없습니다.
+          </div>
+        ) : (
+          todos.map((todo) => <TodoItem key={todo.id} todo={todo} toggleTodo={toggleTodo} updateTodo={updateTodo} />)
+        )}
+      </div>
+
       {hasCompleted && (
         <button
           onClick={clearCompleted}
-          className="text-xs text-gray-400 hover:text-red-400 mb-3 w-full text-left transition-colors duration-200 cursor-pointer"
+          style={{
+            backgroundColor: "transparent",
+            border: "none",
+            color: "#EF4444",
+            fontSize: "12px",
+            fontWeight: "bold",
+            cursor: "pointer",
+            textAlign: "left",
+            marginBottom: "15px",
+          }}
         >
           완료 항목 삭제
         </button>
       )}
-      <div className="flex gap-2">
+
+      <div style={{ display: "flex", gap: "10px", marginTop: "auto" }}>
         <input
           type="text"
-          placeholder="새 작업 추가.."
-          className="border border-stone-200 px-3 py-2 text-sm rounded-lg flex-1 outline-0"
+          placeholder="할일을 추가하세요"
           value={todoInput}
           onChange={(e) => setTodoInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && addTodo()}
+          style={{
+            flex: 1,
+            padding: "10px 15px",
+            borderRadius: "8px",
+            border: "1px solid #E5E7EB",
+            fontSize: "13px",
+            outline: "none",
+          }}
         />
-        <button className="bg-[#2663EB] text-white px-3 rounded transition-colors duration-200 hover:bg-blue-700 cursor-pointer" onClick={addTodo}>
+        <button
+          onClick={addTodo}
+          style={{
+            backgroundColor: "#2563EB",
+            color: "white",
+            border: "none",
+            width: "38px",
+            height: "38px",
+            borderRadius: "8px",
+            fontSize: "20px",
+            fontWeight: "bold",
+            cursor: "pointer",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
           +
         </button>
       </div>
