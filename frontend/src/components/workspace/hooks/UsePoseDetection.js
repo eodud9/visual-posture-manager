@@ -1,4 +1,4 @@
-import { saveCalibration } from "../../api/calibration";
+import { saveCalibration } from "../../../api/calibrations";
 import { useEffect, useRef, useState } from "react";
 import { PostureEngine } from "../../../utils/postureEngine";
 
