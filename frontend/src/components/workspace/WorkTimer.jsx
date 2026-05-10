@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { getPomodoroPresets } from "../../api/pomodoro";
 import { startSession, endSession } from "../../api/sessions";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 
 const DEFAULT_SESSION_COUNTS = [1, 2, 3];
 const DEFAULT_DURATIONS = ["00:05", "25:00", "50:00", "75:00"];
@@ -20,10 +20,14 @@ const parseTime = (timeStr) => {
 };
 
 export const WorkTimer = ({
-  timeLeft, setTimeLeft,
-  isRunning, setIsRunning,
-  sessionId, setSessionId,
-  calibrationPhase, setCalibrationPhase,
+  timeLeft,
+  setTimeLeft,
+  isRunning,
+  setIsRunning,
+  sessionId,
+  setSessionId,
+  calibrationPhase,
+  setCalibrationPhase,
   onStartRequest,
 }) => {
   const navigate = useNavigate();
@@ -74,11 +78,13 @@ export const WorkTimer = ({
   useEffect(() => {
     if (calibrationPhase !== "running" || sessionCreatingRef.current) return;
     sessionCreatingRef.current = true;
-    startSession({ session_count: session, duration_minutes: parseTime(selectedTime) / 60 })
-      .then((res) => {
-        if (res?.id) setSessionId(res.id);
-        else sessionCreatingRef.current = false;
-      });
+    startSession({
+      focusMinutes: parseTime(selectedTime) / 60,
+      breakMinutes: 5,
+    }).then((res) => {
+      if (res?.sessionId) setSessionId(res.sessionId);
+      else sessionCreatingRef.current = false;
+    });
   }, [calibrationPhase]);
 
   // 타이머 틱 — isRunning AND calibrationPhase === "running" 일 때만 동작
@@ -155,11 +161,12 @@ export const WorkTimer = ({
           ? "RUNNING"
           : "READY";
 
-  const statusColor = completedSession !== null
-    ? "text-[#2663EB] font-semibold"
-    : allDone || waitingNextSession
-      ? "text-green-500 font-semibold"
-      : "text-gray-500 font-light";
+  const statusColor =
+    completedSession !== null
+      ? "text-[#2663EB] font-semibold"
+      : allDone || waitingNextSession
+        ? "text-green-500 font-semibold"
+        : "text-gray-500 font-light";
 
   return (
     <div className="bg-white border border-gray-300 p-5 rounded-lg shadow-sm flex flex-col items-center">
@@ -213,14 +220,13 @@ export const WorkTimer = ({
 
         {allDone && (
           <button
-            onClick={() => navigate('/report')}
+            onClick={() => navigate("/report")}
             className="bg-[#F8FAFC] px-4 py-3 rounded-lg text-sm font-bold text-[#64748B] hover:bg-gray-100 cursor-pointer"
           >
             통계 보기
           </button>
         )}
       </div>
-
     </div>
   );
 };
