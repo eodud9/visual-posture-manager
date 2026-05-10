@@ -1,3 +1,4 @@
+import { saveCalibration } from "../../api/calibration";
 import { useEffect, useRef, useState } from "react";
 import { PostureEngine } from "../../../utils/postureEngine";
 
@@ -27,15 +28,32 @@ export const usePoseDetection = (videoRef, status, calibrationPhase, setCalibrat
   const [isBadPosture, setIsBadPosture] = useState(false);
 
   // 자세 분석 결과 처리 — ref로 래핑해 클로저 stale 방지
-  const handlePostureResult = (data) => {
+  const handlePostureResult = async (data) => {
     if (data.status === "CALIBRATING") {
       setPostureStatus("calibrating");
       setCalibProgress(data.progress);
     } else if (data.status === "CALIBRATED") {
       setCalibProgress(100);
       setPostureStatus("calibrated");
+
+      try {
+        await saveCalibration({
+          sample_frame_count: data.sample_frame_count,
+          feature_names: data.feature_names,
+          feature_median: data.feature_median,
+          covariance_matrix: data.covariance_matrix,
+          threshold: data.threshold,
+          alpha: data.alpha,
+          landmarks_used: data.landmarks_used,
+          ridge_applied: data.ridge_applied,
+        });
+
+        console.log("calibration saved");
+      } catch (e) {
+        console.error("calibration save failed", e);
+      }
+
       setCalibrationPhase("running");
-      setTimeout(() => setPostureStatus("monitoring"), 1000);
     } else if (data.status === "MONITORING") {
       setPostureScore(data.score);
       setIsBadPosture(data.is_bad);

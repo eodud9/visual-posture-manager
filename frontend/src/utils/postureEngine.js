@@ -16,11 +16,13 @@ function inv3(M) {
 function cov3(X) {
   const n = X.length;
   const means = [0, 1, 2].map((j) => X.reduce((s, r) => s + r[j], 0) / n);
-  const C = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+  const C = [
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+  ];
   for (const row of X)
-    for (let i = 0; i < 3; i++)
-      for (let j = 0; j < 3; j++)
-        C[i][j] += (row[i] - means[i]) * (row[j] - means[j]);
+    for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) C[i][j] += (row[i] - means[i]) * (row[j] - means[j]);
   return C.map((row) => row.map((v) => v / (n - 1)));
 }
 
@@ -50,9 +52,9 @@ export class PostureEngine {
     const rSh = landmarks[12];
 
     const sh_w = Math.sqrt((lSh.x - rSh.x) ** 2 + (lSh.y - rSh.y) ** 2) + 1e-6;
-    const z_ratio = (((lSh.z + rSh.z) / 2) - ((lEar.z + rEar.z) / 2)) / sh_w * 6.0;
-    const neck_tilt = ((lEar.y - lSh.y) - (rEar.y - rSh.y)) / sh_w * 2.0;
-    const body_slope = (lSh.y - rSh.y) / sh_w * 2.5;
+    const z_ratio = (((lSh.z + rSh.z) / 2 - (lEar.z + rEar.z) / 2) / sh_w) * 6.0;
+    const neck_tilt = ((lEar.y - lSh.y - (rEar.y - rSh.y)) / sh_w) * 2.0;
+    const body_slope = ((lSh.y - rSh.y) / sh_w) * 2.5;
 
     return [z_ratio, neck_tilt, body_slope];
   }
@@ -65,7 +67,9 @@ export class PostureEngine {
       if (this.calibPool.length >= 100) {
         this.mu = median3(this.calibPool);
         const S = cov3(this.calibPool);
-        S[0][0] += 0.01; S[1][1] += 0.01; S[2][2] += 0.01;
+        S[0][0] += 0.01;
+        S[1][1] += 0.01;
+        S[2][2] += 0.01;
         this.invS = inv3(S);
         this.isCalibrated = true;
         return { status: "CALIBRATED", progress: 100 };
