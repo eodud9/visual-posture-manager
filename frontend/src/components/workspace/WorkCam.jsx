@@ -1,47 +1,81 @@
-import React, { useRef } from "react";
-import { useCamera } from "./hooks/useCamera";
+import React, { useEffect, useRef } from "react";
 import { usePoseDetection } from "./hooks/usePoseDetection";
 import { usePostureAlert } from "./hooks/usePostureAlert";
 import { usePip } from "./hooks/usePip";
 
 const ALERT_STYLES = {
   0: { bg: "bg-white", border: "border-gray-300", pip: "#0B121B" },
-  1: { bg: "bg-red-50", border: "border-red-500", pip: "#7f1d1d" },
-  2: { bg: "bg-yellow-50", border: "border-yellow-400", pip: "#713f12" },
-  3: { bg: "bg-yellow-50", border: "border-yellow-400", pip: "#713f12" },
+  1: { bg: "bg-red-500", border: "border-red-500", pip: "#7f1d1d" },
+  2: { bg: "bg-yellow-400", border: "border-yellow-400", pip: "#713f12" },
+  3: { bg: "bg-yellow-400", border: "border-yellow-400", pip: "#713f12" },
 };
 
-export const WorkCam = ({ timeLeft, isRunning, setIsRunning, sessionId, calibrationPhase, setCalibrationPhase }) => {
+export const WorkCam = ({
+  stream,
+  timeLeft,
+  isRunning,
+  setIsRunning,
+  sessionId,
+  calibrationPhase,
+  setCalibrationPhase,
+  setCalibProgress,
+}) => {
   const videoRef = useRef(null);
 
-  // 훅 조합
-  const { status } = useCamera(videoRef);
+  // stream 연결
+  useEffect(() => {
+    const video = videoRef.current;
+
+    if (!stream || !video) return;
+
+    if (video.srcObject !== stream) {
+      video.srcObject = stream;
+    }
+
+    video.onloadedmetadata = () => {
+      video.play().catch(() => {});
+    };
+  }, [stream]);
+
+  // camera status 직접 계산
+  const status = stream ? "active" : "loading";
+
   const { postureStatus, calibProgress, postureScore, isBadPosture } = usePoseDetection(
     videoRef,
     status,
     calibrationPhase,
     setCalibrationPhase,
   );
+  useEffect(() => {
+    setCalibProgress(calibProgress);
+  }, [calibProgress, setCalibProgress]);
+
   const { alertLevel, showModal, closeModal } = usePostureAlert(isBadPosture, calibrationPhase);
+
   const { openPip } = usePip(timeLeft, ALERT_STYLES[alertLevel].pip, () => setIsRunning(false));
 
   const style = ALERT_STYLES[alertLevel];
-  const indicatorColor = status === "active" ? "bg-green-500" : status === "error" ? "bg-red-500" : "bg-gray-500";
-  const statusText = status === "active" ? "카메라 활성" : status === "error" ? "권한 거부됨" : "시스템 대기 중";
+
+  const indicatorColor = status === "active" ? "bg-green-500" : "bg-gray-500";
+
+  const statusText = status === "active" ? "카메라 활성" : "시스템 대기 중";
 
   return (
     <>
-      {/* 3분 경고 모달 */}
+      {/* 자세 경고 모달 */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-2xl shadow-2xl p-8 flex flex-col items-center gap-4 max-w-sm w-full mx-4">
             <div className="text-5xl">⚠️</div>
+
             <h2 className="text-xl font-black text-gray-800">자세 경고</h2>
+
             <p className="text-gray-500 text-sm text-center">
               3분 이상 자세가 틀어진 상태입니다.
               <br />
               잠시 스트레칭 후 바른 자세로 앉아주세요.
             </p>
+
             <button
               onClick={closeModal}
               className="bg-[#2563EB] text-white px-8 py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors cursor-pointer"
@@ -52,12 +86,12 @@ export const WorkCam = ({ timeLeft, isRunning, setIsRunning, sessionId, calibrat
         </div>
       )}
 
-      {/* WorkCam 박스 */}
+      {/* WorkCam */}
       <div
         className={`relative p-3 rounded-lg shadow-sm flex items-center justify-between border-2 transition-all duration-700 ease-in-out ${style.bg} ${style.border}`}
       >
         <div className="flex items-center">
-          {/* 카메라 미리보기 */}
+          {/* 카메라 */}
           <div className="bg-[#0B121B] w-30 h-20 rounded-lg flex items-center justify-center overflow-hidden">
             {status === "active" ? (
               <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
@@ -79,9 +113,10 @@ export const WorkCam = ({ timeLeft, isRunning, setIsRunning, sessionId, calibrat
             )}
           </div>
 
-          {/* 상태 텍스트 */}
+          {/* 상태 */}
           <div className="text-gray-500 ml-5">
             <p>REAL-TIME VISION</p>
+
             <div className="flex gap-2 items-center">
               <div className={`w-2 h-2 rounded-full ${indicatorColor}`} />
               <span>{statusText}</span>
@@ -92,12 +127,15 @@ export const WorkCam = ({ timeLeft, isRunning, setIsRunning, sessionId, calibrat
                 <div className="w-32 bg-gray-200 rounded h-1.5 mt-1">
                   <div className="bg-[#2663EB] h-1.5 rounded" style={{ width: `${calibProgress}%` }} />
                 </div>
+
                 <p className="text-xs text-gray-400 mt-1">캘리브레이션 {calibProgress}/100</p>
               </div>
             )}
+
             {postureStatus === "calibrated" && (
               <p className="text-xs text-green-500 font-semibold mt-1">캘리브레이션 완료</p>
             )}
+
             {postureStatus === "monitoring" && (
               <div>
                 <p
@@ -107,7 +145,9 @@ export const WorkCam = ({ timeLeft, isRunning, setIsRunning, sessionId, calibrat
                 >
                   자세 점수: {postureScore}
                 </p>
+
                 {alertLevel === 1 && <p className="text-xs text-red-400">자세를 바르게 해주세요</p>}
+
                 {alertLevel >= 2 && <p className="text-xs text-yellow-500 font-semibold">⚠️ 장시간 자세 이탈 중</p>}
               </div>
             )}
@@ -120,20 +160,6 @@ export const WorkCam = ({ timeLeft, isRunning, setIsRunning, sessionId, calibrat
         >
           Floating Mode
         </button>
-
-        {/* 캘리브레이션 오버레이 */}
-        {calibrationPhase === "calibrating" && (
-          <div className="absolute inset-0 rounded-lg bg-black/70 flex flex-col items-center justify-center">
-            <p className="font-bold text-white">바른 자세를 유지해주세요</p>
-            <div className="w-48 bg-gray-600 rounded h-1.5 mt-4">
-              <div
-                className="bg-[#2663EB] h-1.5 rounded transition-all duration-200"
-                style={{ width: `${calibProgress}%` }}
-              />
-            </div>
-            <p className="text-xs text-gray-300 mt-2">{calibProgress} / 100 프레임 수집 중</p>
-          </div>
-        )}
       </div>
     </>
   );

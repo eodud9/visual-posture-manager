@@ -41,16 +41,18 @@ export const WorkTimer = ({
   const [waitingNextSession, setWaitingNextSession] = useState(false);
   const sessionCreatingRef = useRef(false);
 
+  console.log(durations);
+
   // 뽀모도로 프리셋 로드
-  useEffect(() => {
-    getPomodoroPresets().then((data) => {
-      if (!Array.isArray(data) || !data.length) return;
-      const counts = [...new Set(data.map((p) => p.sessions).filter(Boolean))].sort((a, b) => a - b);
-      const times = [...new Set(data.map((p) => p.duration).filter(Boolean))];
-      if (counts.length) setSessionCounts(counts);
-      if (times.length) setDurations(times);
-    });
-  }, []);
+  // useEffect(() => {
+  //   getPomodoroPresets().then((data) => {
+  //     if (!Array.isArray(data) || !data.length) return;
+  //     const counts = [...new Set(data.map((p) => p.sessions).filter(Boolean))].sort((a, b) => a - b);
+  //     const times = [...new Set(data.map((p) => p.duration).filter(Boolean))];
+  //     if (counts.length) setSessionCounts(counts);
+  //     if (times.length) setDurations(times);
+  //   });
+  // }, []);
 
   const resetConfig = () => {
     setCurrentSession(1);

@@ -2,32 +2,20 @@ import { saveCalibration } from "../../../api/calibrations";
 import { useEffect, useRef, useState } from "react";
 import { PostureEngine } from "../../../utils/postureEngine";
 
-/**
- * MediaPipe + WebSocket 자세 분석
- * WebSocket 연결 실패 시 로컬 PostureEngine으로 자동 폴백
- *
- * @param {React.RefObject} videoRef - video 엘리먼트 ref
- * @param {string} status - 카메라 상태 ('idle'|'active'|'error')
- * @param {string} calibrationPhase - 'idle'|'calibrating'|'running'
- * @param {(phase: string) => void} setCalibrationPhase
- * @returns {{
- *   postureStatus: 'idle'|'calibrating'|'calibrated'|'monitoring',
- *   calibProgress: number,
- *   postureScore: number|null,
- *   isBadPosture: boolean,
- * }}
- */
 export const usePoseDetection = (videoRef, status, calibrationPhase, setCalibrationPhase) => {
   const wsRef = useRef(null);
   const engineRef = useRef(null);
   const frameCountRef = useRef(0);
+
+  // 추가
+  const poseRef = useRef(null);
+  const cameraRef = useRef(null);
 
   const [postureStatus, setPostureStatus] = useState("idle");
   const [calibProgress, setCalibProgress] = useState(0);
   const [postureScore, setPostureScore] = useState(null);
   const [isBadPosture, setIsBadPosture] = useState(false);
 
-  // 자세 분석 결과 처리 — ref로 래핑해 클로저 stale 방지
   const handlePostureResult = async (data) => {
     if (data.status === "CALIBRATING") {
       setPostureStatus("calibrating");
@@ -47,10 +35,8 @@ export const usePoseDetection = (videoRef, status, calibrationPhase, setCalibrat
           landmarks_used: data.landmarks_used,
           ridge_applied: data.ridge_applied,
         });
-
-        console.log("calibration saved");
       } catch (e) {
-        console.error("calibration save failed", e);
+        console.error(e);
       }
 
       setCalibrationPhase("running");
@@ -59,15 +45,22 @@ export const usePoseDetection = (videoRef, status, calibrationPhase, setCalibrat
       setIsBadPosture(data.is_bad);
     }
   };
+
   const handlePostureResultRef = useRef(handlePostureResult);
   handlePostureResultRef.current = handlePostureResult;
 
-  // WebSocket 생명주기
+  // calibrationPhase를 ref로도 유지해서 mediapipe 클로저에서 최신값을 읽을 수 있게 함
+  const calibrationPhaseRef = useRef(calibrationPhase);
+  calibrationPhaseRef.current = calibrationPhase;
+
+  /*
+   * websocket
+   */
   useEffect(() => {
     if (calibrationPhase === "idle") {
       wsRef.current?.close();
       wsRef.current = null;
-      engineRef.current = null;
+
       setPostureStatus("idle");
       setCalibProgress(0);
       setPostureScore(null);
@@ -76,27 +69,32 @@ export const usePoseDetection = (videoRef, status, calibrationPhase, setCalibrat
     }
 
     const ws = new WebSocket("ws://localhost:8000/ws/posture");
-    ws.onopen = () => setPostureStatus("calibrating");
+
+    ws.onopen = () => console.log("ws connected");
     ws.onmessage = (e) => handlePostureResultRef.current(JSON.parse(e.data));
-    ws.onerror = () => console.warn("[WS] 백엔드 연결 실패 — 로컬 엔진으로 폴백");
-    ws.onclose = () => console.warn("[WS] 연결 종료");
+
+    ws.onerror = () => console.warn("[WS] fallback local engine");
+
     wsRef.current = ws;
 
-    return () => {
-      ws.close();
-      wsRef.current = null;
-    };
+    return () => ws.close();
   }, [calibrationPhase]);
 
-  // MediaPipe 초기화
+  /*
+   * mediapipe (1회만)
+   */
   useEffect(() => {
-    if (status !== "active" || calibrationPhase === "idle") return;
+    if (status !== "active") return;
     if (!window.Pose || !window.Camera) return;
     if (!videoRef.current) return;
+
+    // 이미 생성됐으면 skip
+    if (poseRef.current) return;
 
     const pose = new window.Pose({
       locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`,
     });
+
     pose.setOptions({
       modelComplexity: 1,
       smoothLandmarks: true,
@@ -104,9 +102,15 @@ export const usePoseDetection = (videoRef, status, calibrationPhase, setCalibrat
       minDetectionConfidence: 0.5,
       minTrackingConfidence: 0.5,
     });
+
     pose.onResults((results) => {
       if (!results.poseLandmarks) return;
-      frameCountRef.current += 1;
+
+      // idle이면 아예 무시 (ref로 최신값 읽기)
+      if (calibrationPhaseRef.current === "idle") return;
+
+      frameCountRef.current++;
+
       if (frameCountRef.current % 3 !== 0) return;
 
       const landmarks = results.poseLandmarks.map(({ x, y, z }) => ({ x, y, z }));
@@ -114,26 +118,44 @@ export const usePoseDetection = (videoRef, status, calibrationPhase, setCalibrat
       if (wsRef.current?.readyState === WebSocket.OPEN) {
         wsRef.current.send(JSON.stringify({ landmarks }));
       } else {
-        if (!engineRef.current) engineRef.current = new PostureEngine();
+        if (!engineRef.current) {
+          engineRef.current = new PostureEngine();
+        }
+
         const result = engineRef.current.processFrame(landmarks);
+
         handlePostureResultRef.current(result);
       }
     });
 
     const camera = new window.Camera(videoRef.current, {
       onFrame: async () => {
-        await pose.send({ image: videoRef.current });
+        await pose.send({
+          image: videoRef.current,
+        });
       },
       width: 640,
       height: 480,
     });
+
     camera.start();
 
-    return () => {
-      camera.stop();
-      pose.close();
-    };
-  }, [status, calibrationPhase, videoRef]);
+    poseRef.current = pose;
+    cameraRef.current = camera;
 
-  return { postureStatus, calibProgress, postureScore, isBadPosture };
+    return () => {
+      cameraRef.current?.stop();
+      poseRef.current?.close();
+
+      cameraRef.current = null;
+      poseRef.current = null;
+    };
+  }, [status]); // <-- calibrationPhase 제거
+
+  return {
+    postureStatus,
+    calibProgress,
+    postureScore,
+    isBadPosture,
+  };
 };
