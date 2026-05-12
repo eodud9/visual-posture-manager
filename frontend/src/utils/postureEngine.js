@@ -41,6 +41,7 @@ export class PostureEngine {
     this.emaScore = 0;
     this.calibPool = [];
     this.mu = null;
+    this.S = null; // 원본 공분산 행렬 (DB 저장용)
     this.invS = null;
     this.isCalibrated = false;
   }
@@ -70,9 +71,21 @@ export class PostureEngine {
         S[0][0] += 0.01;
         S[1][1] += 0.01;
         S[2][2] += 0.01;
+        this.S = S; // 원본 공분산 행렬 보존
         this.invS = inv3(S);
         this.isCalibrated = true;
-        return { status: "CALIBRATED", progress: 100 };
+        return {
+          status: "CALIBRATED",
+          progress: 100,
+          sample_frame_count: this.calibPool.length,
+          feature_names: ["z_ratio", "neck_tilt", "body_slope"],
+          feature_median: this.mu,
+          covariance_matrix: this.S,
+          threshold: this.threshold,
+          alpha: this.alpha,
+          landmarks_used: [7, 8, 11, 12],
+          ridge_applied: true,
+        };
       }
       return { status: "CALIBRATING", progress: this.calibPool.length };
     }

@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, Float, Boolean, DateTime, ForeignKey, JSON
-from datetime import datetime
+from datetime import datetime, timezone
 from app.database import Base
 
 class PostureLog(Base):
@@ -19,4 +19,4 @@ class PostureLog(Base):
 
     is_outlier = Column(Boolean, nullable = False)
 
-    created_at = Column(DateTime, default = datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

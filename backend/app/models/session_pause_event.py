@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, DateTime, ForeignKey
-from datetime import datetime
+from datetime import datetime, timezone
 from app.database import Base
 
 class SessionPauseEvent(Base):
@@ -12,4 +12,4 @@ class SessionPauseEvent(Base):
     paused_at = Column(DateTime, nullable = False)
     resumed_at = Column(DateTime, nullable = True)
 
-    created_at = Column(DateTime, default = datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

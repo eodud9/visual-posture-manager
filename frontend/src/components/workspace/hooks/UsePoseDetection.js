@@ -7,7 +7,6 @@ export const usePoseDetection = (videoRef, status, calibrationPhase, setCalibrat
   const engineRef = useRef(null);
   const frameCountRef = useRef(0);
 
-  // 추가
   const poseRef = useRef(null);
   const cameraRef = useRef(null);
 
@@ -23,17 +22,18 @@ export const usePoseDetection = (videoRef, status, calibrationPhase, setCalibrat
     } else if (data.status === "CALIBRATED") {
       setCalibProgress(100);
       setPostureStatus("calibrated");
+      sessionStorage.setItem("isCalibrated", "true"); // ✅ 헤더 상태 표시 갱신용
 
       try {
         await saveCalibration({
-          sample_frame_count: data.sample_frame_count,
-          feature_names: data.feature_names,
-          feature_median: data.feature_median,
-          covariance_matrix: data.covariance_matrix,
+          sampleFrameCount: data.sample_frame_count, // ✅ camelCase로 수정
+          featureNames: data.feature_names,
+          featureMedian: data.feature_median,
+          covarianceMatrix: data.covariance_matrix,
           threshold: data.threshold,
           alpha: data.alpha,
-          landmarks_used: data.landmarks_used,
-          ridge_applied: data.ridge_applied,
+          landmarksUsed: data.landmarks_used,
+          ridgeApplied: data.ridge_applied,
         });
       } catch (e) {
         console.error(e);
@@ -88,7 +88,6 @@ export const usePoseDetection = (videoRef, status, calibrationPhase, setCalibrat
     if (!window.Pose || !window.Camera) return;
     if (!videoRef.current) return;
 
-    // 이미 생성됐으면 skip
     if (poseRef.current) return;
 
     const pose = new window.Pose({
@@ -106,7 +105,6 @@ export const usePoseDetection = (videoRef, status, calibrationPhase, setCalibrat
     pose.onResults((results) => {
       if (!results.poseLandmarks) return;
 
-      // idle이면 아예 무시 (ref로 최신값 읽기)
       if (calibrationPhaseRef.current === "idle") return;
 
       frameCountRef.current++;
@@ -130,9 +128,7 @@ export const usePoseDetection = (videoRef, status, calibrationPhase, setCalibrat
 
     const camera = new window.Camera(videoRef.current, {
       onFrame: async () => {
-        await pose.send({
-          image: videoRef.current,
-        });
+        await pose.send({ image: videoRef.current });
       },
       width: 640,
       height: 480,
@@ -150,7 +146,7 @@ export const usePoseDetection = (videoRef, status, calibrationPhase, setCalibrat
       cameraRef.current = null;
       poseRef.current = null;
     };
-  }, [status]); // <-- calibrationPhase 제거
+  }, [status]);
 
   return {
     postureStatus,

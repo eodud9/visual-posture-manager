@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.models.session import Session as FocusSession
 from app.models.deviation_segment import DeviationSegment
@@ -63,7 +63,7 @@ def pause_session(db: Session, session_id: int):
 
     pause_event = SessionPauseEvent(
         session_id = session_id,
-        paused_at = datetime.utcnow()
+        paused_at = datetime.now(timezone.utc)
     )
 
     session.status = "PAUSED"
@@ -92,7 +92,7 @@ def resume_session(db: Session, session_id: int):
     if pause_event is None:
         raise HTTPException(status_code = 400, detail = "재개할 일시정지 기록이 없습니다.")
 
-    pause_event.resumed_at = datetime.utcnow()
+    pause_event.resumed_at = datetime.now(timezone.utc)
     session.status = "RUNNING"
 
     db.commit()
@@ -114,9 +114,9 @@ def end_session(db: Session, session_id: int):
         ).order_by(SessionPauseEvent.paused_at.desc()).first()
 
         if pause_event is not None:
-            pause_event.resumed_at = datetime.utcnow()
+            pause_event.resumed_at = datetime.now(timezone.utc)
 
-    session.ended_at = datetime.utcnow()
+    session.ended_at = datetime.now(timezone.utc)
     session.status = "ENDED"
 
     db.commit()
@@ -136,9 +136,13 @@ def get_session_report(db: Session, session_id: int):
         SessionPauseEvent.session_id == session_id
     ).all()
 
+    # MySQL DateTime은 timezone 없이 반환되므로 naive로 통일 ✅
+    def _naive(dt):
+        return dt.replace(tzinfo=None) if dt and dt.tzinfo else dt
+
     if session.ended_at is not None:
         total_elapsed_ms = int(
-            (session.ended_at - session.started_at).total_seconds() * 1000
+            (_naive(session.ended_at) - _naive(session.started_at)).total_seconds() * 1000
         )
     else:
         total_elapsed_ms = 0
@@ -148,7 +152,7 @@ def get_session_report(db: Session, session_id: int):
     for event in pause_events:
         if event.resumed_at is not None:
             total_pause_ms += int(
-                (event.resumed_at - event.paused_at).total_seconds() * 1000
+                (_naive(event.resumed_at) - _naive(event.paused_at)).total_seconds() * 1000
             )
 
     total_session_ms = total_elapsed_ms - total_pause_ms

@@ -3,13 +3,14 @@ import { useNavigate } from "react-router-dom";
 
 function Home() {
   const [isChecked, setIsChecked] = useState(false);
+  const [showError, setShowError] = useState(false);
   const navigate = useNavigate();
 
   const handleStart = () => {
     if (isChecked) {
       navigate("/workspace");
     } else {
-      alert("웹캠 사용 및 안내사항에 동의해주세요!");
+      setShowError(true);
     }
   };
 
@@ -84,7 +85,10 @@ function Home() {
             type="checkbox"
             id="agree"
             checked={isChecked}
-            onChange={(e) => setIsChecked(e.target.checked)}
+            onChange={(e) => {
+              setIsChecked(e.target.checked);
+              if (e.target.checked) setShowError(false);
+            }}
             style={{ width: "20px", height: "20px", cursor: "pointer", accentColor: "#2563EB" }}
           />
           <label
@@ -99,6 +103,11 @@ function Home() {
             웹캠 사용 및 안내사항에 동의합니다.
           </label>
         </div>
+        {showError && (
+          <p style={{ color: "#EF4444", fontSize: "13px", marginBottom: "10px", marginTop: "-20px" }}>
+            ✕ 동의 후 시작할 수 있습니다.
+          </p>
+        )}
 
         <button
           onClick={handleStart}

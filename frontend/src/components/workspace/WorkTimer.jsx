@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { getPomodoroPresets } from "../../api/pomodoro";
-import { startSession, endSession } from "../../api/sessions";
+import { startSession, endSession, pauseSession, resumeSession } from "../../api/sessions";
 import { useNavigate } from "react-router-dom";
 
 const DEFAULT_SESSION_COUNTS = [1, 2, 3];
@@ -41,19 +40,6 @@ export const WorkTimer = ({
   const [waitingNextSession, setWaitingNextSession] = useState(false);
   const sessionCreatingRef = useRef(false);
 
-  console.log(durations);
-
-  // 뽀모도로 프리셋 로드
-  // useEffect(() => {
-  //   getPomodoroPresets().then((data) => {
-  //     if (!Array.isArray(data) || !data.length) return;
-  //     const counts = [...new Set(data.map((p) => p.sessions).filter(Boolean))].sort((a, b) => a - b);
-  //     const times = [...new Set(data.map((p) => p.duration).filter(Boolean))];
-  //     if (counts.length) setSessionCounts(counts);
-  //     if (times.length) setDurations(times);
-  //   });
-  // }, []);
-
   const resetConfig = () => {
     setCurrentSession(1);
     setIsRunning(false);
@@ -81,7 +67,7 @@ export const WorkTimer = ({
     if (calibrationPhase !== "running" || sessionCreatingRef.current) return;
     sessionCreatingRef.current = true;
     startSession({
-      focusMinutes: parseTime(selectedTime) / 60,
+      focusMinutes: Math.round(parseTime(selectedTime) / 60),
       breakMinutes: 5,
     }).then((res) => {
       if (res?.sessionId) setSessionId(res.sessionId);
@@ -143,7 +129,12 @@ export const WorkTimer = ({
     if (calibrationPhase === "calibrating") return;
 
     if (calibrationPhase === "running") {
-      setIsRunning((prev) => !prev);
+      const next = !isRunning;
+      setIsRunning(next);
+      if (sessionId) {
+        if (next) resumeSession(sessionId);
+        else pauseSession(sessionId);
+      }
       return;
     }
 
@@ -172,26 +163,36 @@ export const WorkTimer = ({
 
   return (
     <div className="bg-white border border-gray-300 p-5 rounded-lg shadow-sm flex flex-col items-center">
-      <div className="flex gap-1.5 justify-end w-full">
-        <select
-          name="session"
-          id="session"
-          className="bg-[#F1F5F9] px-2 py-1 rounded text-sm"
-          onChange={handleSessionChange}
-        >
-          {sessionCounts.map((count) => (
-            <option key={count} value={count}>
-              {count}
-            </option>
-          ))}
-        </select>
-        <select name="time" id="time" className="bg-[#F1F5F9] px-2 py-1 rounded text-sm" onChange={handleTimeChange}>
-          {durations.map((d) => (
-            <option key={d} value={d}>
-              {d}
-            </option>
-          ))}
-        </select>
+      <div className="flex gap-3 justify-end w-full items-center">
+        <div className="flex items-center gap-1.5">
+          <label htmlFor="session" className="text-xs text-gray-400 font-medium">
+            세션
+          </label>
+          <select
+            name="session"
+            id="session"
+            className="bg-[#F1F5F9] px-2 py-1 rounded text-sm"
+            onChange={handleSessionChange}
+          >
+            {sessionCounts.map((count) => (
+              <option key={count} value={count}>
+                {count}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <label htmlFor="time" className="text-xs text-gray-400 font-medium">
+            시간
+          </label>
+          <select name="time" id="time" className="bg-[#F1F5F9] px-2 py-1 rounded text-sm" onChange={handleTimeChange}>
+            {durations.map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className="flex flex-col items-center py-2">

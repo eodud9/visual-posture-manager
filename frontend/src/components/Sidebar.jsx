@@ -100,7 +100,9 @@ export const Sidebar = () => {
           placeholder="할일을 추가하세요"
           value={todoInput}
           onChange={(e) => setTodoInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && addTodo()}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.nativeEvent.isComposing) addTodo();
+          }}
           style={{
             flex: 1,
             padding: "10px 15px",
