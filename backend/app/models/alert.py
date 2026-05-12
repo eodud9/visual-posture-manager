@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, Float, String, DateTime, ForeignKey
-from datetime import datetime, timezone
+from datetime import datetime
 from app.database import Base
 
 class Alert(Base):
@@ -20,4 +20,4 @@ class Alert(Base):
 
     warning_type = Column(String(100), nullable = False)
 
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default = datetime.utcnow)

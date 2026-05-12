@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, Float, String, DateTime, ForeignKey
-from datetime import datetime, timezone
+from datetime import datetime
 from app.database import Base
 
 class DeviationSegment(Base):
@@ -21,4 +21,4 @@ class DeviationSegment(Base):
 
     reason = Column(String(255), nullable = True)
 
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default = datetime.utcnow)

@@ -13,7 +13,7 @@ if DATABASE_URL is None:
 engine = create_engine(
     DATABASE_URL,
     pool_pre_ping=True,   # 연결 끊김 방지
-    echo=False,           # SQL 로그 출력 — 개발 시 True로 변경
+    echo=True,            # SQL 로그 출력 (개발용) → 운영 → False로 변경
     connect_args={"charset": "utf8mb4"}  # 한글 깨짐 방지
 )
 

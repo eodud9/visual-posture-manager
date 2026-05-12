@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, Float, Boolean, DateTime, JSON
-from datetime import datetime, timezone
+from datetime import datetime
 from app.database import Base
 
 class Calibration(Base):
@@ -18,4 +18,4 @@ class Calibration(Base):
     landmarks_used = Column(JSON, nullable = False)
     ridge_applied = Column(Boolean, nullable = False)
 
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default = datetime.utcnow)

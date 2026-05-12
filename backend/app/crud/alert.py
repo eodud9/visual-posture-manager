@@ -13,19 +13,36 @@ def create_alert(db: Session, session_id: int, body: AlertCreate):
     ).first()
 
     if session is None:
-        raise HTTPException(status_code=404, detail="세션을 찾을 수 없습니다.")
+        raise HTTPException(status_code = 404, detail = "세션을 찾을 수 없습니다.")
 
     segment = db.query(DeviationSegment).filter(
         DeviationSegment.segment_id == body.deviationSegmentId
     ).first()
 
     if segment is None:
-        raise HTTPException(status_code=404, detail="자세 이탈 구간을 찾을 수 없습니다.")
+        raise HTTPException(status_code = 404, detail = "자세 이탈 구간을 찾을 수 없습니다.")
 
     if segment.session_id != session_id:
         raise HTTPException(
             status_code=400,
-            detail="해당 자세 이탈 구간은 이 세션에 속하지 않습니다."
+            detail = "해당 자세 이탈 구간은 이 세션에 속하지 않습니다."
+        )
+    
+    if session.status == "ENDED":
+        raise HTTPException(
+            status_code = 409,
+            detail = "종료된 세션에는 저장할 수 없습니다."
+        )
+
+    existing_alert = db.query(Alert).filter(
+        Alert.deviation_segment_id == body.deviationSegmentId,
+        Alert.warning_level == body.warningLevel
+    ).first()
+
+    if existing_alert is not None:
+        raise HTTPException(
+            status_code = 400,
+            detail = "같은 이탈 구간에 같은 warningLevel은 중복 저장할 수 없습니다."
         )
 
     alert = Alert(

@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, ForeignKey, String, DateTime
 from sqlalchemy.orm import relationship
-from datetime import datetime, timezone
+from datetime import datetime
 from app.database import Base
 
 class Session(Base):
@@ -17,7 +17,7 @@ class Session(Base):
 
     status = Column(String(30), nullable = False, default = "RUNNING")
 
-    started_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    started_at = Column(DateTime, default = datetime.utcnow)
     ended_at = Column(DateTime, nullable = True)
 
     task = relationship("Task")
