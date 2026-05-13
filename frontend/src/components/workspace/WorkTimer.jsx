@@ -66,7 +66,6 @@ export const WorkTimer = ({
   // 캘리브레이션 완료 후 세션 API 호출 (calibrationPhase가 "running"으로 전환될 때)
   useEffect(() => {
     if (calibrationPhase !== "running" || sessionCreatingRef.current) return;
-    if (!calibrationId) return; // ✅ calibrationId 없으면 대기
     sessionCreatingRef.current = true;
     startSession({
       focusMinutes: Math.round(parseTime(selectedTime) / 60),
@@ -76,7 +75,7 @@ export const WorkTimer = ({
       if (res?.sessionId) setSessionId(res.sessionId);
       else sessionCreatingRef.current = false;
     });
-  }, [calibrationPhase, calibrationId]);
+  }, [calibrationPhase]);
 
   // 타이머 틱 — isRunning AND calibrationPhase === "running" 일 때만 동작
   useEffect(() => {
