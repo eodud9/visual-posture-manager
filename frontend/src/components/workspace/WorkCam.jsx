@@ -45,6 +45,7 @@ export const WorkCam = ({
     status,
     calibrationPhase,
     setCalibrationPhase,
+    sessionId, // ✅ 추가
   );
   useEffect(() => {
     setCalibProgress(calibProgress);
@@ -158,7 +159,7 @@ export const WorkCam = ({
           onClick={openPip}
           className="bg-[#2663EB] text-white px-5 py-3 rounded-lg font-bold transition-colors duration-200 hover:bg-blue-700 cursor-pointer"
         >
-          Floating Mode
+          ⧉ 미니 화면
         </button>
       </div>
     </>
