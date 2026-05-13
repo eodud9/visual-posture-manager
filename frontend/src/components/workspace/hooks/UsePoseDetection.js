@@ -31,7 +31,7 @@ export const usePoseDetection = (
       setPostureStatus("calibrated");
       sessionStorage.setItem("isCalibrated", "true");
       try {
-        await saveCalibration({
+        const res = await saveCalibration({
           sampleFrameCount: data.sample_frame_count,
           featureNames: data.feature_names,
           featureMedian: data.feature_median,
