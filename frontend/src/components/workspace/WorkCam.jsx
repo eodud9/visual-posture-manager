@@ -4,10 +4,10 @@ import { usePostureAlert } from "./hooks/usePostureAlert";
 import { usePip } from "./hooks/usePip";
 
 const ALERT_STYLES = {
-  0: { bg: "bg-white", border: "border-gray-300", pip: "#0B121B" },
-  1: { bg: "bg-red-100", border: "border-red-500", pip: "#7f1d1d" },
-  2: { bg: "bg-yellow-100", border: "border-yellow-400", pip: "#713f12" },
-  3: { bg: "bg-yellow-100", border: "border-yellow-400", pip: "#713f12" },
+  0: { bg: "bg-white", border: "border-gray-200", pip: "#0B121B" },
+  1: { bg: "bg-red-200", border: "border-red-500", pip: "#dc2626" },
+  2: { bg: "bg-yellow-100", border: "border-yellow-400", pip: "#f59e0b" },
+  3: { bg: "bg-yellow-100", border: "border-yellow-400", pip: "#f59e0b" },
 };
 
 export const WorkCam = ({
@@ -19,6 +19,7 @@ export const WorkCam = ({
   calibrationPhase,
   setCalibrationPhase,
   setCalibProgress,
+  setCalibrationId,
 }) => {
   const videoRef = useRef(null);
 
@@ -45,6 +46,8 @@ export const WorkCam = ({
     status,
     calibrationPhase,
     setCalibrationPhase,
+    sessionId,
+    setCalibrationId,
   );
   useEffect(() => {
     setCalibProgress(calibProgress);
@@ -88,11 +91,11 @@ export const WorkCam = ({
 
       {/* WorkCam */}
       <div
-        className={`relative p-3 rounded-lg shadow-sm flex items-center justify-between border-2 transition-all duration-700 ease-in-out ${style.bg} ${style.border}`}
+        className={`relative p-3 rounded-lg flex items-center justify-between border-2 shadow-sm transition-all duration-700 ease-in-out ${style.bg} ${style.border}`}
       >
         <div className="flex items-center">
           {/* 카메라 */}
-          <div className="bg-[#0B121B] w-48 h-32 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
+          <div className="bg-[#0B121B] w-48 h-32 rounded-lg flex items-center justify-center overflow-hidden shrink-0">
             {status === "active" ? (
               <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
             ) : (
@@ -158,7 +161,7 @@ export const WorkCam = ({
           onClick={openPip}
           className="bg-[#2663EB] text-white px-5 py-3 rounded-lg font-bold transition-colors duration-200 hover:bg-blue-700 cursor-pointer"
         >
-          Floating Mode
+          ⧉ 미니 화면
         </button>
       </div>
     </>

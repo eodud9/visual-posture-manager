@@ -28,6 +28,7 @@ export const WorkTimer = ({
   calibrationPhase,
   setCalibrationPhase,
   onStartRequest,
+  calibrationId,
 }) => {
   const navigate = useNavigate();
   const [sessionCounts, setSessionCounts] = useState(DEFAULT_SESSION_COUNTS);
@@ -69,6 +70,7 @@ export const WorkTimer = ({
     startSession({
       focusMinutes: Math.round(parseTime(selectedTime) / 60),
       breakMinutes: 5,
+      calibrationId: calibrationId ?? undefined, // ✅ 추가
     }).then((res) => {
       if (res?.sessionId) setSessionId(res.sessionId);
       else sessionCreatingRef.current = false;
@@ -162,7 +164,7 @@ export const WorkTimer = ({
         : "text-gray-500 font-light";
 
   return (
-    <div className="bg-white border border-gray-300 p-5 rounded-lg shadow-sm flex flex-col items-center">
+    <div className="bg-white border border-gray-200 p-10 rounded-lg shadow-sm flex flex-col items-center">
       <div className="flex gap-3 justify-end w-full items-center">
         <div className="flex items-center gap-1.5">
           <label htmlFor="session" className="text-xs text-gray-400 font-medium">
@@ -205,9 +207,9 @@ export const WorkTimer = ({
 
       {allDone && <p className="text-green-500 text-sm font-medium mb-4">모든 세션이 완료되었습니다!</p>}
 
-      <div className="flex gap-3 items-center">
+      <div className="flex gap-3 items-center justify-center w-full">
         <button
-          className="bg-[#2663EB] px-5 py-3 rounded-lg w-50 text-white font-bold transition-colors duration-200 hover:bg-blue-700 cursor-pointer"
+          className="bg-[#2663EB] px-5 py-3 mt-5 rounded-lg w-1/2 text-white font-bold transition-colors duration-200 hover:bg-blue-700 cursor-pointer"
           onClick={handleStart}
         >
           {isRunning
