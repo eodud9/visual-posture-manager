@@ -4,10 +4,10 @@ import { usePostureAlert } from "./hooks/usePostureAlert";
 import { usePip } from "./hooks/usePip";
 
 const ALERT_STYLES = {
-  0: { bg: "bg-white", border: "border-gray-300", pip: "#0B121B" },
-  1: { bg: "bg-red-100", border: "border-red-500", pip: "#7f1d1d" },
-  2: { bg: "bg-yellow-100", border: "border-yellow-400", pip: "#713f12" },
-  3: { bg: "bg-yellow-100", border: "border-yellow-400", pip: "#713f12" },
+  0: { bg: "bg-white", border: "border-gray-200", pip: "#0B121B" },
+  1: { bg: "bg-red-200", border: "border-red-500", pip: "#dc2626" },
+  2: { bg: "bg-yellow-100", border: "border-yellow-400", pip: "#f59e0b" },
+  3: { bg: "bg-yellow-100", border: "border-yellow-400", pip: "#f59e0b" },
 };
 
 export const WorkCam = ({
@@ -19,6 +19,7 @@ export const WorkCam = ({
   calibrationPhase,
   setCalibrationPhase,
   setCalibProgress,
+  setCalibrationId, // ✅ 추가
 }) => {
   const videoRef = useRef(null);
 
@@ -46,6 +47,7 @@ export const WorkCam = ({
     calibrationPhase,
     setCalibrationPhase,
     sessionId, // ✅ 추가
+    setCalibrationId, // ✅ 추가
   );
   useEffect(() => {
     setCalibProgress(calibProgress);
@@ -93,7 +95,7 @@ export const WorkCam = ({
       >
         <div className="flex items-center">
           {/* 카메라 */}
-          <div className="bg-[#0B121B] w-48 h-32 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
+          <div className="bg-[#0B121B] w-48 h-32 rounded-lg flex items-center justify-center overflow-hidden shrink-0">
             {status === "active" ? (
               <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
             ) : (

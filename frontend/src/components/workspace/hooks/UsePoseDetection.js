@@ -8,6 +8,7 @@ export const usePoseDetection = (
   calibrationPhase,
   setCalibrationPhase,
   sessionId, // ✅ sessionId 추가 — WS URL에 필요
+  setCalibrationId, // ✅ 추가
 ) => {
   const wsRef = useRef(null);
   const engineRef = useRef(null);
@@ -30,7 +31,7 @@ export const usePoseDetection = (
       setPostureStatus("calibrated");
       sessionStorage.setItem("isCalibrated", "true");
       try {
-        await saveCalibration({
+        const res = await saveCalibration({
           sampleFrameCount: data.sample_frame_count,
           featureNames: data.feature_names,
           featureMedian: data.feature_median,
@@ -40,6 +41,9 @@ export const usePoseDetection = (
           landmarksUsed: data.landmarks_used,
           ridgeApplied: data.ridge_applied,
         });
+        if (res?.calibrationId) {
+          setCalibrationId(res.calibrationId); // ✅ 추가
+        }
       } catch (e) {
         console.error("[Calibration] 저장 실패:", e);
       }

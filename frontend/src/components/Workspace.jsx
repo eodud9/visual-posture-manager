@@ -81,6 +81,7 @@ export const Workspace = () => {
   const [timeLeft, setTimeLeft] = useState(parseTime("00:05"));
   const [isRunning, setIsRunning] = useState(false);
   const [sessionId, setSessionId] = useState(null);
+  const [calibrationId, setCalibrationId] = useState(null); // ✅ 추가
 
   const [calibrationPhase, setCalibrationPhase] = useState("idle");
   const [showGuideModal, setShowGuideModal] = useState(true);
@@ -139,6 +140,7 @@ export const Workspace = () => {
         calibrationPhase={calibrationPhase}
         setCalibrationPhase={setCalibrationPhase}
         onStartRequest={onStartRequest}
+        calibrationId={calibrationId} // ✅ 추가
       />
 
       <WorkCam
@@ -150,6 +152,7 @@ export const Workspace = () => {
         calibrationPhase={calibrationPhase}
         setCalibrationPhase={setCalibrationPhase}
         setCalibProgress={setCalibProgress}
+        setCalibrationId={setCalibrationId} // ✅ 추가
       />
 
       <GuideModal open={showGuideModal} onConfirm={onGuideConfirm} />
