@@ -14,18 +14,3 @@ class PostureSessionState:
         
         # 5. 마지막으로 처리한 프레임의 시각 (시각 동기화용) [cite: 1317, 1318]
         self.last_timestamp_ms: int = None
-
-# 세션별 상태 저장소
-_state_store: dict[int, PostureSessionState] = {}
-
-
-def get_state(session_id: int) -> PostureSessionState:
-    """세션 상태 조회 — 없으면 새로 생성"""
-    if session_id not in _state_store:
-        _state_store[session_id] = PostureSessionState()
-    return _state_store[session_id]
-
-
-def remove_state(session_id: int) -> None:
-    """WS 연결 종료 시 세션 상태 제거"""
-    _state_store.pop(session_id, None)

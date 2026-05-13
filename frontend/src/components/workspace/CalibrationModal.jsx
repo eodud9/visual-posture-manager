@@ -52,46 +52,37 @@ export const CalibrationModal = ({ open, stream, calibProgress, calibrationPhase
     <div
       className="fixed inset-0 z-999 flex items-center justify-center transition-opacity duration-300"
       style={{
-        backgroundColor: show ? "rgba(0,0,0,0.25)" : "rgba(0,0,0,0)",
+        backgroundColor: show ? "rgba(13,38,80,0.65)" : "rgba(13,38,80,0)",
         opacity: show ? 1 : 0,
       }}
     >
       <div
-        className="w-220 max-w-[92vw] rounded-2xl p-8 shadow-2xl transition-all duration-300 bg-white flex flex-col items-center"
+        className="w-210 max-w-[92vw] rounded-2xl p-8 shadow-2xl transition-all duration-300"
         style={{
+          background: "linear-gradient(145deg, #eff6ff 0%, #dbeafe 100%)",
+          border: "1px solid #bfdbfe",
           transform: show ? "translateY(0) scale(1)" : "translateY(12px) scale(0.97)",
         }}
       >
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-3">자세 캘리브레이션</h2>
-        <p className="text-sm text-gray-400 text-center mb-5">어깨와 머리가 가이드라인 안에 들어오도록 앉아주세요</p>
+        <h2 className="text-2xl font-bold mb-1 text-center text-blue-900">자세 캘리브레이션</h2>
+        <p className="text-sm text-blue-400 text-center mb-5">어깨와 머리가 가이드라인 안에 들어오도록 앉아주세요</p>
 
-        <div className="relative w-[75%] aspect-video bg-black rounded-xl overflow-hidden shadow-md border-2 border-stone-200">
+        <div className="relative w-full aspect-video bg-black rounded-xl overflow-hidden shadow-sm">
           <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
 
           <div className="absolute inset-0 pointer-events-none">
             <svg
-              viewBox="0 0 200 140"
+              viewBox="0 0 200 270"
               className="w-full h-full"
               preserveAspectRatio="xMidYMid meet"
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
-                d="
-    M 100 6
-    C 70 6, 58 28, 58 52
-    C 58 72, 68 84, 82 88
-    C 76 90, 60 92, 44 100
-    C 28 108, 10 116, 6 140
-    M 194 140
-    C 190 116, 172 108, 156 100
-    C 140 92, 124 90, 118 88
-    C 132 84, 142 72, 142 52
-    C 142 28, 130 6, 100 6
-  "
+                d="M 100 74 C 80 74, 62 84, 52 100 C 43 114, 40 132, 40 148 C 40 168, 47 184, 56 195 C 40 203, 22 212, 14 224 C 8 234, 6 248, 6 268 L 194 268 C 194 248, 192 234, 186 224 C 178 212, 160 203, 144 195 C 153 184, 160 168, 160 148 C 160 132, 157 114, 148 100 C 138 84, 120 74, 100 74 Z"
                 fill="none"
-                stroke="rgba(255, 255, 255, 0.85)"
-                strokeWidth="0.8"
-                strokeDasharray="6 4"
+                stroke="#60a5fa"
+                strokeWidth="2.2"
+                strokeDasharray="8 5"
                 strokeLinejoin="round"
                 strokeLinecap="round"
               />
@@ -100,7 +91,7 @@ export const CalibrationModal = ({ open, stream, calibProgress, calibrationPhase
         </div>
 
         {calibrationPhase === "calibrating" && (
-          <div className="mt-5 w-full">
+          <div className="mt-5">
             <div className="w-full h-3 bg-blue-100 rounded-full">
               <div
                 className="bg-blue-600 h-3 rounded-full"
@@ -114,18 +105,19 @@ export const CalibrationModal = ({ open, stream, calibProgress, calibrationPhase
           </div>
         )}
 
-        <div className="flex justify-center gap-3 mt-6 w-full">
+        <div className="flex justify-center gap-3 mt-6">
           {calibrationPhase === "idle" && (
             <button
               onClick={handleStartCalibration}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors cursor-pointer"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors"
             >
               캘리브레이션 시작
             </button>
           )}
           <button
             onClick={onClose}
-            className="px-6 py-3 rounded-xl font-semibold transition-colors bg-gray-100 text-gray-500 hover:bg-gray-200 cursor-pointer"
+            className="px-6 py-3 rounded-xl font-semibold transition-colors"
+            style={{ background: "#dbeafe", color: "#1d4ed8" }}
           >
             취소
           </button>

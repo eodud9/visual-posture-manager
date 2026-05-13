@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
-from datetime import datetime, timezone
+from datetime import datetime
 
 from app.models.session import Session as FocusSession
 from app.models.deviation_segment import DeviationSegment
@@ -10,8 +10,6 @@ from app.schemas.session import SessionCreate
 from app.models.task import Task
 from app.models.calibration import Calibration
 
-def _naive(dt):
-    return dt.replace(tzinfo=None) if dt and dt.tzinfo else dt
 
 def create_session(db: Session, body: SessionCreate):
 

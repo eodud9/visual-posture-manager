@@ -30,18 +30,20 @@ const GuideModal = ({ open, onConfirm }) => {
 
   return (
     <div
-      className="fixed inset-0 z-999 flex items-center justify-center transition-opacity duration-300"
-      style={{ backgroundColor: show ? "rgba(0,0,0,0.25)" : "rgba(0,0,0,0)", opacity: show ? 1 : 0 }}
+      className="fixed inset-0 z-[999] flex items-center justify-center transition-opacity duration-300"
+      style={{ backgroundColor: show ? "rgba(13,38,80,0.65)" : "rgba(13,38,80,0)", opacity: show ? 1 : 0 }}
     >
       <div
-        className="w-220 h-130 max-w-[92vw] rounded-2xl p-8 shadow-2xl transition-all duration-300 flex flex-col items-center justify-center bg-white"
+        className="w-250 h-130 max-w-[92vw] rounded-2xl p-8 shadow-2xl transition-all duration-300 flex flex-col items-center justify-center"
         style={{
+          background: "linear-gradient(145deg, #eff6ff 0%, #dbeafe 100%)",
+          border: "1px solid #bfdbfe",
           transform: show ? "translateY(0) scale(1)" : "translateY(12px) scale(0.97)",
         }}
       >
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-3">사용 가이드</h2>
-        <p className="text-sm text-gray-400 text-center mb-6">
-          자세 가이드 확인 → 캘리브레이션 → 집중 시작 → 미니 화면
+        <h2 className="text-2xl font-bold text-center text-blue-900 mb-1">사용 가이드</h2>
+        <p className="text-sm text-blue-400 text-center mb-6">
+          자세 가이드 확인 → 캘리브레이션 → 집중 시작 → Floating Mode
         </p>
 
         <div className="flex gap-4 mb-6 w-full">
@@ -68,7 +70,7 @@ const GuideModal = ({ open, onConfirm }) => {
 
         <button
           onClick={onConfirm}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors text-base cursor-pointer"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors text-base"
         >
           확인했습니다
         </button>
@@ -81,7 +83,6 @@ export const Workspace = () => {
   const [timeLeft, setTimeLeft] = useState(parseTime("00:05"));
   const [isRunning, setIsRunning] = useState(false);
   const [sessionId, setSessionId] = useState(null);
-  const [calibrationId, setCalibrationId] = useState(null); // ✅ 추가
 
   const [calibrationPhase, setCalibrationPhase] = useState("idle");
   const [showGuideModal, setShowGuideModal] = useState(true);
@@ -140,7 +141,6 @@ export const Workspace = () => {
         calibrationPhase={calibrationPhase}
         setCalibrationPhase={setCalibrationPhase}
         onStartRequest={onStartRequest}
-        calibrationId={calibrationId}
       />
 
       <WorkCam
@@ -152,7 +152,6 @@ export const Workspace = () => {
         calibrationPhase={calibrationPhase}
         setCalibrationPhase={setCalibrationPhase}
         setCalibProgress={setCalibProgress}
-        setCalibrationId={setCalibrationId}
       />
 
       <GuideModal open={showGuideModal} onConfirm={onGuideConfirm} />

@@ -2,17 +2,11 @@ import { saveCalibration } from "../../../api/calibrations";
 import { useEffect, useRef, useState } from "react";
 import { PostureEngine } from "../../../utils/postureEngine";
 
-export const usePoseDetection = (
-  videoRef,
-  status,
-  calibrationPhase,
-  setCalibrationPhase,
-  sessionId, // ✅ sessionId 추가 — WS URL에 필요
-  setCalibrationId,
-) => {
+export const usePoseDetection = (videoRef, status, calibrationPhase, setCalibrationPhase) => {
   const wsRef = useRef(null);
   const engineRef = useRef(null);
   const frameCountRef = useRef(0);
+
   const poseRef = useRef(null);
   const cameraRef = useRef(null);
 
@@ -21,18 +15,18 @@ export const usePoseDetection = (
   const [postureScore, setPostureScore] = useState(null);
   const [isBadPosture, setIsBadPosture] = useState(false);
 
-  // 로컬 엔진 결과 처리 (캘리브레이션 단계)
-  const handleLocalResult = async (data) => {
+  const handlePostureResult = async (data) => {
     if (data.status === "CALIBRATING") {
       setPostureStatus("calibrating");
       setCalibProgress(data.progress);
     } else if (data.status === "CALIBRATED") {
       setCalibProgress(100);
       setPostureStatus("calibrated");
-      sessionStorage.setItem("isCalibrated", "true");
+      sessionStorage.setItem("isCalibrated", "true"); // ✅ 헤더 상태 표시 갱신용
+
       try {
         await saveCalibration({
-          sampleFrameCount: data.sample_frame_count,
+          sampleFrameCount: data.sample_frame_count, // ✅ camelCase로 수정
           featureNames: data.feature_names,
           featureMedian: data.feature_median,
           covarianceMatrix: data.covariance_matrix,
@@ -41,68 +35,59 @@ export const usePoseDetection = (
           landmarksUsed: data.landmarks_used,
           ridgeApplied: data.ridge_applied,
         });
-        if (res?.calibrationId) {
-          setCalibrationId(res.calibrationId); // ✅ 추가
-        }
       } catch (e) {
-        console.error("[Calibration] 저장 실패:", e);
+        console.error(e);
       }
+
       setCalibrationPhase("running");
+    } else if (data.status === "MONITORING") {
+      setPostureScore(data.score);
+      setIsBadPosture(data.is_bad);
     }
   };
 
-  // 백엔드 WS 분석 결과 처리 (모니터링 단계)
-  const handleWsResult = (data) => {
-    if (data.type !== "analysis_result") return;
-    setPostureStatus("monitoring");
-    setPostureScore(data.emaScore);
-    setIsBadPosture(data.isOutlier);
-  };
+  const handlePostureResultRef = useRef(handlePostureResult);
+  handlePostureResultRef.current = handlePostureResult;
 
-  const handleLocalResultRef = useRef(handleLocalResult);
-  handleLocalResultRef.current = handleLocalResult;
-  const handleWsResultRef = useRef(handleWsResult);
-  handleWsResultRef.current = handleWsResult;
-
+  // calibrationPhase를 ref로도 유지해서 mediapipe 클로저에서 최신값을 읽을 수 있게 함
   const calibrationPhaseRef = useRef(calibrationPhase);
   calibrationPhaseRef.current = calibrationPhase;
 
-  // ✅ 모니터링 단계 진입 + sessionId 확보 시 백엔드 WS 연결
+  /*
+   * websocket
+   */
   useEffect(() => {
-    if (calibrationPhase !== "running" || !sessionId) return;
+    if (calibrationPhase === "idle") {
+      wsRef.current?.close();
+      wsRef.current = null;
 
-    const ws = new WebSocket(`ws://localhost:8000/ws/sessions/${sessionId}/posture`);
+      setPostureStatus("idle");
+      setCalibProgress(0);
+      setPostureScore(null);
+      setIsBadPosture(false);
+      return;
+    }
 
-    ws.onopen = () => console.log("[WS] 백엔드 연결됨");
-    ws.onmessage = (e) => handleWsResultRef.current(JSON.parse(e.data));
-    ws.onerror = (e) => console.warn("[WS] 연결 오류:", e);
-    ws.onclose = () => console.log("[WS] 연결 종료");
+    const ws = new WebSocket("ws://localhost:8000/ws/posture");
+
+    ws.onopen = () => console.log("ws connected");
+    ws.onmessage = (e) => handlePostureResultRef.current(JSON.parse(e.data));
+
+    ws.onerror = () => console.warn("[WS] fallback local engine");
 
     wsRef.current = ws;
 
-    return () => {
-      ws.close();
-      wsRef.current = null;
-    };
-  }, [calibrationPhase, sessionId]);
-
-  // calibrationPhase idle 복귀 시 상태 초기화
-  useEffect(() => {
-    if (calibrationPhase !== "idle") return;
-    wsRef.current?.close();
-    wsRef.current = null;
-    engineRef.current = null;
-    setPostureStatus("idle");
-    setCalibProgress(0);
-    setPostureScore(null);
-    setIsBadPosture(false);
+    return () => ws.close();
   }, [calibrationPhase]);
 
-  // MediaPipe (1회만 초기화)
+  /*
+   * mediapipe (1회만)
+   */
   useEffect(() => {
     if (status !== "active") return;
     if (!window.Pose || !window.Camera) return;
     if (!videoRef.current) return;
+
     if (poseRef.current) return;
 
     const pose = new window.Pose({
@@ -119,53 +104,25 @@ export const usePoseDetection = (
 
     pose.onResults((results) => {
       if (!results.poseLandmarks) return;
+
       if (calibrationPhaseRef.current === "idle") return;
 
       frameCountRef.current++;
+
       if (frameCountRef.current % 3 !== 0) return;
 
-      const phase = calibrationPhaseRef.current;
+      const landmarks = results.poseLandmarks.map(({ x, y, z }) => ({ x, y, z }));
 
-      if (phase === "calibrating") {
-        // ✅ 캘리브레이션: 로컬 엔진이 처리
-        const landmarks = results.poseLandmarks.map(({ x, y, z }) => ({
-          x,
-          y,
-          z,
-        }));
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({ landmarks }));
+      } else {
+        if (!engineRef.current) {
+          engineRef.current = new PostureEngine();
+        }
 
-        // 거북목 테스트용 로그
-        const lEar = landmarks[7],
-          rEar = landmarks[8];
-        const lSh = landmarks[11],
-          rSh = landmarks[12];
-        const sh_w = Math.sqrt((lSh.x - rSh.x) ** 2 + (lSh.y - rSh.y) ** 2);
-        const z_ratio = (((lSh.z + rSh.z) / 2 - (lEar.z + rEar.z) / 2) / sh_w) * 6.0;
-        const ear_to_sh = (lSh.y - lEar.y + (rSh.y - rEar.y)) / 2 / sh_w;
-        console.log(`z_ratio: ${z_ratio.toFixed(3)}, ear_to_sh: ${ear_to_sh.toFixed(3)}`);
-
-        if (!engineRef.current) engineRef.current = new PostureEngine();
         const result = engineRef.current.processFrame(landmarks);
-        handleLocalResultRef.current(result);
-      } else if (phase === "running") {
-        // ✅ 모니터링: 백엔드 WS로 전송 (id + visibility 포함)
-        if (wsRef.current?.readyState !== WebSocket.OPEN) return;
 
-        const landmarks = results.poseLandmarks.map((lm, id) => ({
-          id,
-          x: lm.x,
-          y: lm.y,
-          z: lm.z,
-          visibility: lm.visibility ?? 1.0,
-        }));
-
-        wsRef.current.send(
-          JSON.stringify({
-            type: "landmark_frame", // ✅ 백엔드가 기대하는 타입
-            timestampMs: Date.now(), // ✅ 백엔드 deviation 시간 계산용
-            landmarks,
-          }),
-        );
+        handlePostureResultRef.current(result);
       }
     });
 
@@ -178,16 +135,23 @@ export const usePoseDetection = (
     });
 
     camera.start();
+
     poseRef.current = pose;
     cameraRef.current = camera;
 
     return () => {
       cameraRef.current?.stop();
       poseRef.current?.close();
+
       cameraRef.current = null;
       poseRef.current = null;
     };
   }, [status]);
 
-  return { postureStatus, calibProgress, postureScore, isBadPosture };
+  return {
+    postureStatus,
+    calibProgress,
+    postureScore,
+    isBadPosture,
+  };
 };
