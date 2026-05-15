@@ -78,7 +78,7 @@ const GuideModal = ({ open, onConfirm }) => {
 };
 
 export const Workspace = () => {
-  const [timeLeft, setTimeLeft] = useState(parseTime("00:05"));
+  const [timeLeft, setTimeLeft] = useState(parseTime("25:00"));
   const [isRunning, setIsRunning] = useState(false);
   const [sessionId, setSessionId] = useState(null);
   const [calibrationId, setCalibrationId] = useState(null); // ✅ 추가

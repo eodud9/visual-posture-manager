@@ -32,7 +32,9 @@ function Report() {
         </button>
       </div>
 
-      <p style={{ fontSize: "14px", color: "#6B7280" }}>통계화면</p>
+      <div>
+        <h1>통계 화면</h1>
+      </div>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
-import { usePoseDetection } from "./hooks/usePoseDetection";
-import { usePostureAlert } from "./hooks/usePostureAlert";
-import { usePip } from "./hooks/usePip";
+import { usePoseDetection } from "./hooks/UsePoseDetection";
+import { usePostureAlert } from "./hooks/UsePostureAlert";
+import { usePip } from "./hooks/UsePip";
 
 const ALERT_STYLES = {
   0: { bg: "bg-white", border: "border-gray-200", pip: "#0B121B" },
@@ -55,7 +55,7 @@ export const WorkCam = ({
 
   const { alertLevel, showModal, closeModal } = usePostureAlert(isBadPosture, calibrationPhase);
 
-  const { openPip } = usePip(timeLeft, ALERT_STYLES[alertLevel].pip, () => setIsRunning(false));
+  const { openPip } = usePip(timeLeft, ALERT_STYLES[alertLevel].pip, alertLevel, () => setIsRunning(false));
 
   const style = ALERT_STYLES[alertLevel];
 
@@ -140,19 +140,13 @@ export const WorkCam = ({
             )}
 
             {postureStatus === "monitoring" && (
-              <div>
-                <p
-                  className={`text-xs mt-1 font-semibold ${
-                    alertLevel === 0 ? "text-green-500" : alertLevel === 1 ? "text-red-500" : "text-yellow-500"
-                  }`}
-                >
-                  자세 점수: {postureScore}
-                </p>
-
-                {alertLevel === 1 && <p className="text-xs text-red-400">자세를 바르게 해주세요</p>}
-
-                {alertLevel >= 2 && <p className="text-xs text-yellow-500 font-semibold">⚠️ 장시간 자세 이탈 중</p>}
-              </div>
+              <p
+                className={`text-xs mt-1 font-semibold ${
+                  alertLevel === 0 ? "text-green-500" : alertLevel === 1 ? "text-red-500" : "text-yellow-500"
+                }`}
+              >
+                {alertLevel === 0 ? "자세 양호" : alertLevel === 1 ? "자세 이탈 감지" : "⚠️ 장시간 자세 이탈"}
+              </p>
             )}
           </div>
         </div>

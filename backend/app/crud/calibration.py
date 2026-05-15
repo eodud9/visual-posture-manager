@@ -21,6 +21,16 @@ def create_calibration(db: Session, body: CalibrationCreate):
 
     return calibration
 
+def get_calibration(db: Session, calibration_id: int):
+    calibration = db.query(Calibration).filter(
+        Calibration.calibration_id == calibration_id
+    ).first()
+
+    if calibration is None:
+        raise HTTPException(status_code=404, detail="캘리브레이션 정보가 없습니다.")
+
+    return calibration
+
 
 def get_latest_calibration(db: Session):
     calibration = db.query(Calibration).order_by(
@@ -31,3 +41,4 @@ def get_latest_calibration(db: Session):
         raise HTTPException(status_code=404, detail="캘리브레이션 정보가 없습니다.")
 
     return calibration
+

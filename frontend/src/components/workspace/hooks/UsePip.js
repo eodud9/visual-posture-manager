@@ -19,7 +19,7 @@ const formatTime = (seconds) => {
  * @param {() => void} onClose - PiP 창 닫힐 때 콜백
  * @returns {{ openPip: () => Promise<void> }}
  */
-export const usePip = (timeLeft, pipBgColor, onClose) => {
+export const usePip = (timeLeft, pipBgColor, alertLevel, onClose) => {
   const pipWindowRef = useRef(null);
 
   // 타이머 텍스트 동기화
@@ -29,11 +29,24 @@ export const usePip = (timeLeft, pipBgColor, onClose) => {
     if (timerEl) timerEl.textContent = formatTime(timeLeft);
   }, [timeLeft]);
 
-  // 배경색 동기화
+  // 배경색 + 메시지 동기화
   useEffect(() => {
     if (!pipWindowRef.current) return;
     pipWindowRef.current.document.body.style.background = pipBgColor;
-  }, [pipBgColor]);
+
+    const msgEl = pipWindowRef.current.document.getElementById("pip-msg");
+    if (!msgEl) return;
+
+    if (alertLevel === 0) {
+      msgEl.textContent = "";
+    } else if (alertLevel === 1) {
+      msgEl.textContent = "⚠️ 자세를 바르게 해주세요";
+    } else if (alertLevel === 2) {
+      msgEl.textContent = "🚨 장시간 자세 이탈 중";
+    } else if (alertLevel === 3) {
+      msgEl.textContent = "🚨 지금 바로 스트레칭하세요!";
+    }
+  }, [pipBgColor, alertLevel]);
 
   const openPip = async () => {
     if (!("documentPictureInPicture" in window)) {
@@ -71,8 +84,14 @@ export const usePip = (timeLeft, pipBgColor, onClose) => {
     timer.textContent = formatTime(timeLeft);
     timer.style.cssText = "font-size:64px; font-weight:800; margin:0; line-height:1; letter-spacing:-2px;";
 
+    const msg = pipWindow.document.createElement("p");
+    msg.id = "pip-msg";
+    msg.textContent = "";
+    msg.style.cssText = "font-size:13px; font-weight:600; margin:14px 0 0; letter-spacing:0.5px;";
+
     pipWindow.document.body.appendChild(label);
     pipWindow.document.body.appendChild(timer);
+    pipWindow.document.body.appendChild(msg);
   };
 
   return { openPip };

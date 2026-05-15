@@ -3,7 +3,7 @@ import { startSession, endSession, pauseSession, resumeSession } from "../../api
 import { useNavigate } from "react-router-dom";
 
 const DEFAULT_SESSION_COUNTS = [1, 2, 3];
-const DEFAULT_DURATIONS = ["00:05", "25:00", "50:00", "75:00"];
+const DEFAULT_DURATIONS = ["25:00", "50:00", "75:00"];
 
 const formatTime = (seconds) => {
   const m = Math.floor(seconds / 60)

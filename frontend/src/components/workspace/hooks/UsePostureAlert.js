@@ -5,8 +5,8 @@ import { useEffect, useRef, useState, useCallback } from "react";
  * 0: 정상, 1: 5초+(빨강), 2: 30초+(노랑+경고음), 3: 3분+(모달)
  */
 const getAlertLevel = (seconds) => {
-  if (seconds >= 180) return 3;
-  if (seconds >= 30) return 2;
+  if (seconds >= 15) return 3;
+  if (seconds >= 10) return 2;
   if (seconds >= 5) return 1;
   return 0;
 };
@@ -46,7 +46,12 @@ export const usePostureAlert = (isBadPosture, calibrationPhase) => {
   const [alertLevel, setAlertLevel] = useState(0);
   const [showModal, setShowModal] = useState(false);
 
-  const closeModal = useCallback(() => setShowModal(false), []);
+  const closeModal = useCallback(() => {
+    setShowModal(false);
+    modalShownRef.current = false; // ← 추가
+    badPostureSecondsRef.current = 0; // ← 추가: 카운터도 리셋
+    setAlertLevel(0); // ← 추가: UI 상태도 리셋
+  }, []);
 
   // 자세 이탈 타이머 시작/중지
   useEffect(() => {
@@ -57,10 +62,10 @@ export const usePostureAlert = (isBadPosture, calibrationPhase) => {
         const level = getAlertLevel(badPostureSecondsRef.current);
         setAlertLevel(level);
 
-        if (badPostureSecondsRef.current === 30) {
+        if (badPostureSecondsRef.current === 10) {
           playAlertSound();
         }
-        if (badPostureSecondsRef.current === 180 && !modalShownRef.current) {
+        if (badPostureSecondsRef.current === 15 && !modalShownRef.current) {
           modalShownRef.current = true;
           setShowModal(true);
           playAlertSound();

@@ -1,6 +1,9 @@
 from sqlalchemy import Column, Integer, Float, Boolean, DateTime, ForeignKey, JSON
 from datetime import datetime
 from app.database import Base
+from sqlalchemy import BigInteger
+
+
 
 class PostureLog(Base):
     __tablename__ = "posture_logs"
@@ -10,7 +13,7 @@ class PostureLog(Base):
     session_id = Column(Integer, ForeignKey("sessions.session_id"), nullable = False)
     calibration_id = Column(Integer, ForeignKey("calibrations.calibration_id"), nullable = False)
 
-    timestamp_ms = Column(Integer, nullable = False)
+    timestamp_ms = Column(BigInteger, nullable=False)
 
     features = Column(JSON, nullable = False)
 

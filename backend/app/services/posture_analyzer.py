@@ -2,7 +2,7 @@
 import numpy as np
 
 def extract_features(landmarks):
-    """랜드마크 좌표에서 자세 특징량(zRatio, neckTilt, bodySlope) 계산""" [cite: 1243]
+    """랜드마크 좌표에서 자세 특징량(zRatio, neckTilt, bodySlope) 계산"""
     # 설계서 규격에 맞게 리스트를 딕셔너리로 변환 (id 기반 접근) [cite: 1130]
     lm = {item['id']: item for item in landmarks}
     
@@ -27,7 +27,7 @@ def extract_features(landmarks):
     return {"zRatio": z_ratio, "neckTilt": neck_tilt, "bodySlope": body_slope}
 
 def calculate_mahalanobis(features, calibration):
-    """캘리브레이션 기준값 대비 현재 자세의 마할라노비스 거리(MD Score) 계산""" [cite: 1243]
+    """캘리브레이션 기준값 대비 현재 자세의 마할라노비스 거리(MD Score) 계산""" 
     feat_vec = np.array([features['zRatio'], features['neckTilt'], features['bodySlope']])
     mu = np.array(calibration.feature_median)
     
@@ -40,7 +40,7 @@ def calculate_mahalanobis(features, calibration):
     return float(md_score)
 
 def analyze_posture(landmarks, calibration, state, timestamp_ms):
-    """전체 분석 흐름 통합 및 경고 단계 판단""" [cite: 1243]
+    """전체 분석 흐름 통합 및 경고 단계 판단""" 
     # 1. 특징량 추출
     features = extract_features(landmarks)
     if not features:
@@ -69,9 +69,9 @@ def analyze_posture(landmarks, calibration, state, timestamp_ms):
         deviation_duration_ms = timestamp_ms - state.deviation_start_time_ms
         
         # 지속 시간에 따른 경고 단계 판정 (5초, 30초, 3분) [cite: 87, 88, 89, 1211]
-        if deviation_duration_ms >= 180000: # 3분
+        if deviation_duration_ms >= 15000: # 3분
             warning_level, warning_type = 3, "MODAL_POPUP"
-        elif deviation_duration_ms >= 30000: # 30초
+        elif deviation_duration_ms >= 10000: # 30초
             warning_level, warning_type = 2, "PIP_YELLOW_SCREEN"
         elif deviation_duration_ms >= 5000: # 5초
             warning_level, warning_type = 1, "PIP_RED_SCREEN"

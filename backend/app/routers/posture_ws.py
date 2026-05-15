@@ -6,10 +6,13 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.crud.session import get_session
 from app.crud.posture_log import create_posture_logs
+from app.crud.calibration import get_calibration  # import 추가
+
 from app.schemas.posture_log import PostureLogCreate, PostureLogItem
 
 from app.services.posture_analyzer import analyze_posture
 from app.services.posture_state import get_state, remove_state
+
 
 
 router = APIRouter(prefix="/ws", tags=["WebSocket"])
@@ -34,7 +37,10 @@ async def posture_websocket(
             })
             await websocket.close()
             return
-
+        
+        calibration = get_calibration(db, session.calibration_id)
+        
+        remove_state(session_id)   # ← 추가
         state = get_state(session_id)
 
         while True:
@@ -81,7 +87,7 @@ async def posture_websocket(
             try:
                 result = analyze_posture(
                     landmarks=landmarks,
-                    calibration=session.calibration,
+                    calibration=calibration,
                     state=state,
                     timestamp_ms=timestamp_ms
                 )
@@ -92,11 +98,13 @@ async def posture_websocket(
                     "message": str(e)
                 })
                 continue
-            except Exception:
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
                 await websocket.send_json({
                     "type": "error",
                     "code": "ANALYSIS_FAILED",
-                    "message": "자세 분석 중 오류가 발생했습니다."
+                    "message": str(e)
                 })
                 continue
 

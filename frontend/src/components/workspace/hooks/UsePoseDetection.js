@@ -53,6 +53,7 @@ export const usePoseDetection = (
 
   // 백엔드 WS 분석 결과 처리 (모니터링 단계)
   const handleWsResult = (data) => {
+    console.log("[WS 수신]", data); // ← type 필터 전에 찍기
     if (data.type !== "analysis_result") return;
     setPostureStatus("monitoring");
     setPostureScore(data.emaScore);
@@ -69,6 +70,7 @@ export const usePoseDetection = (
 
   // ✅ 모니터링 단계 진입 + sessionId 확보 시 백엔드 WS 연결
   useEffect(() => {
+    console.log("[WS Effect]", { calibrationPhase, sessionId });
     if (calibrationPhase !== "running" || !sessionId) return;
 
     const ws = new WebSocket(`ws://localhost:8000/ws/sessions/${sessionId}/posture`);
