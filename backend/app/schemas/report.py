@@ -11,6 +11,12 @@ class DeviationSegmentReport(BaseModel):
     threshold: float
     reason: Optional[str]
 
+class DeviationDistributionItem(BaseModel):
+    bucketStartMs: int
+    bucketEndMs: int
+    deviationCount: int
+    totalDeviationMs: int
+
 class SessionReportResponse(BaseModel):
     sessionId: int
     totalSessionMs: int
@@ -18,3 +24,4 @@ class SessionReportResponse(BaseModel):
     deviationCount: int
     deviationRatio: float
     segments: List[DeviationSegmentReport]
+    deviationDistribution: List[DeviationDistributionItem]
