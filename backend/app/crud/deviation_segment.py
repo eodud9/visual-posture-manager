@@ -43,3 +43,28 @@ def create_deviation_segment(db: Session, session_id: int, body: DeviationSegmen
     db.refresh(segment)
 
     return segment
+
+def update_deviation_segment(
+    db: Session,
+    segment_id: int,
+    end_time_ms: int,
+    duration_ms: int,
+    max_ema_score: float,
+    avg_ema_score: float
+):
+    segment = db.query(DeviationSegment).filter(
+        DeviationSegment.segment_id == segment_id
+    ).first()
+
+    if segment is None:
+        raise HTTPException(status_code=404, detail="자세 이탈 구간을 찾을 수 없습니다.")
+
+    segment.end_time_ms = end_time_ms
+    segment.duration_ms = duration_ms
+    segment.max_ema_score = max_ema_score
+    segment.avg_ema_score = avg_ema_score
+
+    db.commit()
+    db.refresh(segment)
+
+    return segment

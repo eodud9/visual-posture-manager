@@ -65,20 +65,25 @@ def analyze_posture(landmarks, calibration, state, timestamp_ms):
     if is_outlier:
         if state.deviation_start_time_ms is None:
             state.deviation_start_time_ms = timestamp_ms # 이탈 시작 시점 기록 [cite: 1320]
-        
+            state.deviation_max_ema_score = ema_score
+            state.deviation_ema_sum = 0.0
+            state.deviation_frame_count = 0
+
         deviation_duration_ms = timestamp_ms - state.deviation_start_time_ms
+
+        state.deviation_max_ema_score = max(state.deviation_max_ema_score, ema_score)
+        state.deviation_ema_sum += ema_score
+        state.deviation_frame_count += 1
         
         # 지속 시간에 따른 경고 단계 판정 (5초, 30초, 3분) [cite: 87, 88, 89, 1211]
-        if deviation_duration_ms >= 15000: # 3분
+        if deviation_duration_ms >= 180000: # 3분
             warning_level, warning_type = 3, "MODAL_POPUP"
-        elif deviation_duration_ms >= 10000: # 30초
+        elif deviation_duration_ms >= 30000: # 30초
             warning_level, warning_type = 2, "PIP_YELLOW_SCREEN"
         elif deviation_duration_ms >= 5000: # 5초
             warning_level, warning_type = 1, "PIP_RED_SCREEN"
     else:
-        # 정상 자세로 돌아오면 이탈 상태 초기화 [cite: 1320]
-        state.deviation_start_time_ms = None
-        state.triggered_warning_levels.clear()
+        pass
 
     return {
         "features": features,

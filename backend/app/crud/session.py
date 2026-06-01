@@ -127,6 +127,32 @@ def end_session(db: Session, session_id: int):
 
     return session
 
+def build_deviation_distribution(segments, total_session_ms: int, bucket_size_ms: int = 60000):
+    if total_session_ms <= 0:
+        return []
+
+    bucket_count = (total_session_ms + bucket_size_ms - 1) // bucket_size_ms
+
+    distribution = [
+        {
+            "bucketStartMs": i * bucket_size_ms,
+            "bucketEndMs": min((i + 1) * bucket_size_ms, total_session_ms),
+            "deviationCount": 0,
+            "totalDeviationMs": 0
+        }
+        for i in range(bucket_count)
+    ]
+
+    for segment in segments:
+        for bucket in distribution:
+            overlap_start = max(segment.start_time_ms, bucket["bucketStartMs"])
+            overlap_end = min(segment.end_time_ms, bucket["bucketEndMs"])
+
+            if overlap_start < overlap_end:
+                bucket["deviationCount"] += 1
+                bucket["totalDeviationMs"] += overlap_end - overlap_start
+
+    return distribution
 
 def get_session_report(db: Session, session_id: int):
     session = get_session(db, session_id)
@@ -151,7 +177,7 @@ def get_session_report(db: Session, session_id: int):
     for event in pause_events:
         if event.resumed_at is not None:
             total_pause_ms += int(
-                (_naive(session.ended_at) - _naive(session.started_at)).total_seconds() * 1000
+                (_naive(event.resumed_at) - _naive(event.paused_at)).total_seconds() * 1000
             )
 
     total_session_ms = total_elapsed_ms - total_pause_ms
@@ -165,6 +191,12 @@ def get_session_report(db: Session, session_id: int):
     deviation_ratio = 0
     if total_session_ms > 0:
         deviation_ratio = total_deviation_ms / total_session_ms
+
+    deviation_distribution = build_deviation_distribution(
+        segments=segments,
+        total_session_ms=total_session_ms,
+        bucket_size_ms=60000
+    )
 
     return {
         "sessionId": session.session_id,
@@ -184,5 +216,6 @@ def get_session_report(db: Session, session_id: int):
                 "reason": segment.reason
             }
             for segment in segments
-        ]
+        ],
+        "deviationDistribution": deviation_distribution
     }

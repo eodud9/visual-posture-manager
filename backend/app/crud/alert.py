@@ -1,10 +1,10 @@
 from sqlalchemy.orm import Session
-from app.models.alert import Alert
-from app.schemas.alert import AlertCreate
-
 from fastapi import HTTPException
+
+from app.models.alert import Alert
 from app.models.session import Session as FocusSession
 from app.models.deviation_segment import DeviationSegment
+from app.schemas.alert import AlertCreate
 
 def create_alert(db: Session, session_id: int, body: AlertCreate):
 
