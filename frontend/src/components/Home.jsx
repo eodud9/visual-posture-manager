@@ -15,119 +15,217 @@ function Home() {
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        height: "100vh",
-        backgroundColor: "#F8F9FA",
-        fontFamily: "sans-serif",
-      }}
-    >
+    <div style={{ minHeight: "100%", display: "flex", flexDirection: "column", background: "var(--bg)" }}>
+      {/* slim top bar */}
+      <div style={{ height: "var(--header-h)", display: "flex", alignItems: "center", gap: 9, padding: "0 26px" }}>
+        <span style={{ color: "var(--brand)", display: "flex" }}>
+          <LogoIcon />
+        </span>
+        <span style={{ fontWeight: 700, fontSize: 14.5, letterSpacing: "-0.02em", color: "var(--text)" }}>
+          Visual Posture Manager
+        </span>
+      </div>
+
+      {/* centered card */}
       <div
         style={{
-          backgroundColor: "white",
-          padding: "50px 40px",
-          borderRadius: "16px",
-          width: "600px",
-          color: "#1F2937",
-          textAlign: "center",
-          boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-          border: "1px solid #F3F4F6",
+          flex: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "24px 24px 60px",
         }}
       >
-        <h1
-          style={{
-            color: "#2563EB",
-            fontSize: "30px",
-            fontWeight: "900",
-            marginBottom: "15px",
-            letterSpacing: "0.5px",
-          }}
-        >
-          VISUAL POSTURE MANAGER
-        </h1>
-        <h2 style={{ fontSize: "14px", color: "#6B7280", fontWeight: "normal", marginBottom: "15px" }}>
-          웹캠 기반 노트북으로 작업하는 사용자의 상체 자세를 실시간으로 인식하고 <br></br>기준 자세 대비 이탈 여부를
-          감지하는 웹서비스입니다.
-        </h2>
-        <h2 style={{ fontSize: "16px", color: "#6B7280", fontWeight: "normal", marginBottom: "10px" }}>
-          서비스 이용을 위해 아래 사항을 확인해주세요
-        </h2>
-
         <div
           style={{
-            fontSize: "13px",
-            lineHeight: "1.8",
-            color: "#4B5563",
-            marginBottom: "35px",
-            textAlign: "left",
-            backgroundColor: "#F9FAFB",
-            padding: "20px",
-            borderRadius: "10px",
-            border: "1px solid #E5E7EB",
+            width: 520,
+            maxWidth: "100%",
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
+            borderRadius: "var(--r-xl)",
+            boxShadow: "var(--sh-md)",
+            padding: "40px 40px 32px",
           }}
         >
-          <p style={{ margin: "0 0 10px 0", fontWeight: "bold", color: "#1F2937" }}>
-            ✅ 개인정보 보호 및 데이터 사용 안내
-          </p>
-          <p style={{ margin: 0 }}>
-            • 본 서비스는 자세 모니터링을 위해 사용자의 웹캠 영상을 실시간으로 활용합니다.
-            <br />• 실시간 인공지능 분석 목적으로만 로컬에서 처리됩니다.
-          </p>
-        </div>
-
-        <div
-          style={{ marginBottom: "35px", display: "flex", alignItems: "center", justifyContent: "center", gap: "12px" }}
-        >
-          <input
-            type="checkbox"
-            id="agree"
-            checked={isChecked}
-            onChange={(e) => {
-              setIsChecked(e.target.checked);
-              if (e.target.checked) setShowError(false);
-            }}
-            style={{ width: "20px", height: "20px", cursor: "pointer", accentColor: "#2563EB" }}
-          />
-          <label
-            htmlFor="agree"
+          {/* icon */}
+          <div
             style={{
-              fontSize: "15px",
-              color: isChecked ? "#111827" : "#6B7280",
-              cursor: "pointer",
-              fontWeight: isChecked ? "bold" : "normal",
+              width: 48,
+              height: 48,
+              borderRadius: 13,
+              background: "var(--brand-soft)",
+              color: "var(--brand)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: 22,
             }}
           >
-            웹캠 사용 및 안내사항에 동의합니다.
-          </label>
-        </div>
-        {showError && (
-          <p style={{ color: "#EF4444", fontSize: "13px", marginBottom: "10px", marginTop: "-20px" }}>
-            ✕ 동의 후 시작할 수 있습니다.
-          </p>
-        )}
+            <LogoIcon size={26} />
+          </div>
 
-        <button
-          onClick={handleStart}
-          style={{
-            backgroundColor: isChecked ? "#2563EB" : "#D1D5DB",
-            color: "white",
-            border: "none",
-            padding: "15px 0",
-            fontSize: "16px",
-            borderRadius: "10px",
-            cursor: isChecked ? "pointer" : "not-allowed",
-            fontWeight: "bold",
-            width: "100%",
-            transition: "background-color 0.2s",
-          }}
-        >
-          시작하기
-        </button>
+          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: "-0.03em", color: "var(--text)" }}>
+            Visual Posture Manager
+          </h1>
+          <p style={{ margin: "10px 0 0", fontSize: 14.5, lineHeight: 1.65, color: "var(--text-2)" }}>
+            웹캠으로 작업 중인 상체 자세를 실시간으로 인식하고, 기준 자세 대비 이탈을 감지하는
+            집중 관리 서비스입니다.
+          </p>
+
+          {/* privacy notice */}
+          <div
+            style={{
+              marginTop: 26,
+              padding: "18px",
+              background: "var(--surface-2)",
+              border: "1px solid var(--border)",
+              borderRadius: "var(--r-lg)",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 12 }}>
+              <span style={{ color: "var(--green)", display: "flex" }}>
+                <ShieldIcon />
+              </span>
+              <span style={{ fontSize: 13.5, fontWeight: 700, color: "var(--text)" }}>
+                개인정보 보호 및 데이터 사용 안내
+              </span>
+            </div>
+            <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 9 }}>
+              {[
+                "자세 모니터링을 위해 웹캠 영상을 실시간으로 활용합니다.",
+                "모든 영상은 기기 내(로컬)에서만 분석되며 서버로 전송·저장되지 않습니다.",
+              ].map((t, i) => (
+                <li key={i} style={{ display: "flex", gap: 9, fontSize: 13, lineHeight: 1.5, color: "var(--text-2)" }}>
+                  <span style={{ color: "var(--green)", marginTop: 1, flexShrink: 0, display: "flex" }}>
+                    <CheckIcon />
+                  </span>
+                  <span>{t}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* consent */}
+          <label
+            style={{
+              marginTop: 22,
+              display: "flex",
+              alignItems: "center",
+              gap: 11,
+              cursor: "pointer",
+              userSelect: "none",
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={isChecked}
+              onChange={(e) => {
+                setIsChecked(e.target.checked);
+                if (e.target.checked) setShowError(false);
+              }}
+              style={{
+                appearance: "none",
+                width: 19,
+                height: 19,
+                border: `1.6px solid ${isChecked ? "var(--brand)" : "var(--border-strong)"}`,
+                borderRadius: 6,
+                background: isChecked ? "var(--brand)" : "var(--surface)",
+                cursor: "pointer",
+                position: "relative",
+                flexShrink: 0,
+                transition: "background 0.15s, border-color 0.15s",
+              }}
+            />
+            <span
+              style={{
+                fontSize: 14,
+                fontWeight: isChecked ? 600 : 500,
+                color: isChecked ? "var(--text)" : "var(--text-2)",
+              }}
+            >
+              웹캠 사용 및 안내사항에 동의합니다.
+            </span>
+          </label>
+
+          {showError && (
+            <p
+              style={{
+                margin: "12px 0 0",
+                fontSize: 12.5,
+                color: "var(--red)",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              <AlertIcon /> 동의 후 시작할 수 있습니다.
+            </p>
+          )}
+
+          <button
+            onClick={handleStart}
+            disabled={!isChecked}
+            style={{
+              marginTop: 24,
+              width: "100%",
+              height: 50,
+              background: isChecked ? "var(--brand)" : "#d6d9e0",
+              color: "#fff",
+              border: "none",
+              borderRadius: "var(--r-md)",
+              fontSize: 15,
+              fontWeight: 600,
+              cursor: isChecked ? "pointer" : "not-allowed",
+              transition: "background 0.15s",
+              boxShadow: isChecked
+                ? "0 1px 1px rgba(20,28,46,0.12), inset 0 1px 0 rgba(255,255,255,0.12)"
+                : "none",
+            }}
+            onMouseEnter={(e) => { if (isChecked) e.currentTarget.style.background = "var(--brand-hover)"; }}
+            onMouseLeave={(e) => { if (isChecked) e.currentTarget.style.background = "var(--brand)"; }}
+          >
+            시작하기
+          </button>
+        </div>
       </div>
     </div>
+  );
+}
+
+function LogoIcon({ size = 22 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+      <rect x="3" y="3" width="18" height="18" rx="5" opacity="0.18" />
+      <circle cx="12" cy="9.2" r="2.7" />
+      <path d="M6.5 18.5c0-3 2.5-5 5.5-5s5.5 2 5.5 5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ShieldIcon() {
+  return (
+    <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3l7 3v5c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6z" />
+      <path d="M9 12l2 2 4-4" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
+function AlertIcon() {
+  return (
+    <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3l9.5 16.5H2.5z" />
+      <line x1="12" y1="10" x2="12" y2="14" />
+      <circle cx="12" cy="17" r="0.6" fill="currentColor" />
+    </svg>
   );
 }
 

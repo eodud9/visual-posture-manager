@@ -17,4 +17,4 @@ export const saveAlert = (sessionId, alert) => apiPost(`/api/sessions/${sessionI
 
 export const saveFeedback = (sessionId, feedback) => apiPost(`/api/sessions/${sessionId}/feedback`, feedback);
 
-export const getReport = (sessionId) => apiGet(`/api/sessions/${sessionId}/report`);
+export const getSessionReport = (sessionId) => apiGet(`/api/sessions/${sessionId}/report`);

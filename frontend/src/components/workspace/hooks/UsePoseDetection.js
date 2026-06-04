@@ -1,6 +1,7 @@
 import { saveCalibration } from "../../../api/calibrations";
 import { useEffect, useRef, useState } from "react";
 import { PostureEngine } from "../../../utils/postureEngine";
+import { saveDeviationSegment } from "../../../api/sessions";
 
 export const usePoseDetection = (
   videoRef,
@@ -9,12 +10,26 @@ export const usePoseDetection = (
   setCalibrationPhase,
   sessionId, // ✅ sessionId 추가 — WS URL에 필요
   setCalibrationId, // ✅ 추가
+  calibrationId, // ← 추가
 ) => {
   const wsRef = useRef(null);
   const engineRef = useRef(null);
   const frameCountRef = useRef(0);
   const poseRef = useRef(null);
   const cameraRef = useRef(null);
+
+  const sessionIdRef = useRef(sessionId);
+  useEffect(() => {
+    sessionIdRef.current = sessionId;
+  }, [sessionId]);
+  const deviationStartMsRef = useRef(null);
+  const lastEmaScoreRef = useRef(0);
+  const lastThresholdRef = useRef(1);
+
+  const calibrationIdRef = useRef(calibrationId);
+  useEffect(() => {
+    calibrationIdRef.current = calibrationId;
+  }, [calibrationId]);
 
   const [postureStatus, setPostureStatus] = useState("idle");
   const [calibProgress, setCalibProgress] = useState(0);
@@ -53,11 +68,41 @@ export const usePoseDetection = (
 
   // 백엔드 WS 분석 결과 처리 (모니터링 단계)
   const handleWsResult = (data) => {
-    console.log("[WS 수신]", data); // ← type 필터 전에 찍기
+    console.log("[WS 수신]", data);
     if (data.type !== "analysis_result") return;
     setPostureStatus("monitoring");
     setPostureScore(data.emaScore);
     setIsBadPosture(data.isOutlier);
+
+    lastEmaScoreRef.current = data.emaScore ?? lastEmaScoreRef.current;
+    lastThresholdRef.current = data.threshold ?? lastThresholdRef.current;
+
+    const now = data.timestampMs ?? Date.now();
+
+    if (data.isOutlier) {
+      if (deviationStartMsRef.current === null) {
+        deviationStartMsRef.current = now;
+      }
+    } else {
+      if (deviationStartMsRef.current !== null) {
+        const startMs = deviationStartMsRef.current;
+        const endMs = now;
+        const durationMs = endMs - startMs;
+        deviationStartMsRef.current = null;
+        if (durationMs > 0 && sessionIdRef.current) {
+          saveDeviationSegment(sessionIdRef.current, {
+            calibrationId: calibrationIdRef.current, // ← 추가
+            startTimeMs: startMs,
+            endTimeMs: endMs,
+            durationMs,
+            maxEmaScore: lastEmaScoreRef.current,
+            avgEmaScore: lastEmaScoreRef.current,
+            threshold: lastThresholdRef.current,
+            reason: "outlier",
+          }).catch((e) => console.warn("[Deviation] 저장 실패:", e));
+        }
+      }
+    }
   };
 
   const handleLocalResultRef = useRef(handleLocalResult);
@@ -83,6 +128,24 @@ export const usePoseDetection = (
     wsRef.current = ws;
 
     return () => {
+      if (deviationStartMsRef.current !== null && sessionIdRef.current) {
+        const endMs = Date.now();
+        const startMs = deviationStartMsRef.current;
+        const durationMs = endMs - startMs;
+        deviationStartMsRef.current = null;
+        if (durationMs > 0) {
+          saveDeviationSegment(sessionIdRef.current, {
+            calibrationId: calibrationIdRef.current,
+            startTimeMs: startMs,
+            endTimeMs: endMs,
+            durationMs,
+            maxEmaScore: lastEmaScoreRef.current,
+            avgEmaScore: lastEmaScoreRef.current,
+            threshold: lastThresholdRef.current,
+            reason: "outlier",
+          }).catch(() => {});
+        }
+      }
       ws.close();
       wsRef.current = null;
     };

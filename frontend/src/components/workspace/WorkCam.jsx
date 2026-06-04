@@ -19,26 +19,18 @@ export const WorkCam = ({
   calibrationPhase,
   setCalibrationPhase,
   setCalibProgress,
-  setCalibrationId, // ✅ 추가
+  setCalibrationId,
+  calibrationId,
 }) => {
   const videoRef = useRef(null);
 
-  // stream 연결
   useEffect(() => {
     const video = videoRef.current;
-
     if (!stream || !video) return;
-
-    if (video.srcObject !== stream) {
-      video.srcObject = stream;
-    }
-
-    video.onloadedmetadata = () => {
-      video.play().catch(() => {});
-    };
+    if (video.srcObject !== stream) video.srcObject = stream;
+    video.onloadedmetadata = () => { video.play().catch(() => {}); };
   }, [stream]);
 
-  // camera status 직접 계산
   const status = stream ? "active" : "loading";
 
   const { postureStatus, calibProgress, postureScore, isBadPosture } = usePoseDetection(
@@ -46,34 +38,102 @@ export const WorkCam = ({
     status,
     calibrationPhase,
     setCalibrationPhase,
-    sessionId, // ✅ 추가
-    setCalibrationId, // ✅ 추가
+    sessionId,
+    setCalibrationId,
+    calibrationId,
   );
+
   useEffect(() => {
     setCalibProgress(calibProgress);
   }, [calibProgress, setCalibProgress]);
 
   const { alertLevel, showModal, closeModal } = usePostureAlert(isBadPosture, calibrationPhase);
-
   const { openPip } = usePip(timeLeft, ALERT_STYLES[alertLevel].pip, alertLevel, () => setIsRunning(false));
 
-  const style = ALERT_STYLES[alertLevel];
+  const isMonitoring = postureStatus === "monitoring";
+  const isCalibrating = postureStatus === "calibrating";
 
-  const indicatorColor = status === "active" ? "bg-green-500" : "bg-gray-500";
+  /* border color based on alert */
+  const borderColor =
+    alertLevel === 1
+      ? "var(--red)"
+      : alertLevel >= 2
+        ? "var(--amber)"
+        : "var(--border)";
 
-  const statusText = status === "active" ? "카메라 활성" : "시스템 대기 중";
+  const cardBg =
+    alertLevel === 1
+      ? "var(--red-soft)"
+      : alertLevel >= 2
+        ? "var(--amber-soft)"
+        : "var(--surface)";
+
+  const postureText =
+    alertLevel === 0
+      ? "자세 양호"
+      : alertLevel === 1
+        ? "자세 이탈 감지"
+        : "장시간 자세 이탈";
+
+  const postureColor =
+    alertLevel === 0
+      ? "var(--green)"
+      : alertLevel === 1
+        ? "var(--red)"
+        : "var(--amber)";
 
   return (
     <>
-      {/* 자세 경고 모달 */}
+      {/* posture warning modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 flex flex-col items-center gap-4 max-w-sm w-full mx-4">
-            <div className="text-5xl">⚠️</div>
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 50,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "rgba(22, 27, 38, 0.42)",
+            backdropFilter: "blur(3px)",
+            animation: "vpm-fade 0.2s ease",
+          }}
+        >
+          <div
+            style={{
+              background: "var(--surface)",
+              borderRadius: "var(--r-xl)",
+              boxShadow: "var(--sh-lg)",
+              padding: 36,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 16,
+              maxWidth: 360,
+              width: "90vw",
+              animation: "vpm-pop 0.22s cubic-bezier(0.16, 1, 0.3, 1)",
+            }}
+          >
+            <div
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: 14,
+                background: "var(--amber-soft)",
+                color: "var(--amber)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <AlertTriangleIcon size={26} />
+            </div>
 
-            <h2 className="text-xl font-black text-gray-800">자세 경고</h2>
+            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--text)" }}>
+              자세 경고
+            </h2>
 
-            <p className="text-gray-500 text-sm text-center">
+            <p style={{ margin: 0, fontSize: 13.5, color: "var(--text-2)", textAlign: "center", lineHeight: 1.65 }}>
               3분 이상 자세가 틀어진 상태입니다.
               <br />
               잠시 스트레칭 후 바른 자세로 앉아주세요.
@@ -81,7 +141,22 @@ export const WorkCam = ({
 
             <button
               onClick={closeModal}
-              className="bg-[#2563EB] text-white px-8 py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors cursor-pointer"
+              style={{
+                marginTop: 4,
+                width: "100%",
+                height: 48,
+                background: "var(--brand)",
+                color: "#fff",
+                border: "none",
+                borderRadius: "var(--r-md)",
+                fontSize: 15,
+                fontWeight: 600,
+                cursor: "pointer",
+                fontFamily: "inherit",
+                transition: "background 0.15s",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--brand-hover)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "var(--brand)"; }}
             >
               확인
             </button>
@@ -89,75 +164,182 @@ export const WorkCam = ({
         </div>
       )}
 
-      {/* WorkCam */}
+      {/* camera card */}
       <div
-        className={`relative p-3 rounded-lg shadow-sm flex items-center justify-between border-2 transition-all duration-700 ease-in-out ${style.bg} ${style.border}`}
+        style={{
+          background: cardBg,
+          border: `1px solid ${borderColor}`,
+          borderRadius: "var(--r-lg)",
+          boxShadow: "var(--sh-sm)",
+          padding: 14,
+          display: "flex",
+          alignItems: "center",
+          gap: 16,
+          transition: "background 0.5s, border-color 0.5s",
+        }}
       >
-        <div className="flex items-center">
-          {/* 카메라 */}
-          <div className="bg-[#0B121B] w-48 h-32 rounded-lg flex items-center justify-center overflow-hidden shrink-0">
-            {status === "active" ? (
-              <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
-            ) : (
-              <svg
-                width="25"
-                height="25"
-                viewBox="0 0 16 16"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-white"
-              >
-                <rect x="2" y="4.5" width="9" height="7" rx="1.5" />
-                <path d="M11 7l3-1.5v5L11 9z" />
-              </svg>
-            )}
-          </div>
-
-          {/* 상태 */}
-          <div className="text-gray-500 ml-5">
-            <p>REAL-TIME VISION</p>
-
-            <div className="flex gap-2 items-center">
-              <div className={`w-2 h-2 rounded-full ${indicatorColor}`} />
-              <span>{statusText}</span>
+        {/* video preview */}
+        <div
+          style={{
+            width: 132,
+            height: 86,
+            borderRadius: 10,
+            overflow: "hidden",
+            flexShrink: 0,
+            border: "1px solid var(--border)",
+            background: "#0b121b",
+          }}
+        >
+          {status === "active" ? (
+            <video ref={videoRef} autoPlay playsInline muted style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ) : (
+            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <CameraIcon />
             </div>
-
-            {postureStatus === "calibrating" && (
-              <div>
-                <div className="w-32 bg-gray-200 rounded h-1.5 mt-1">
-                  <div className="bg-[#2663EB] h-1.5 rounded" style={{ width: `${calibProgress}%` }} />
-                </div>
-
-                <p className="text-xs text-gray-400 mt-1">캘리브레이션 {calibProgress}/100</p>
-              </div>
-            )}
-
-            {postureStatus === "calibrated" && (
-              <p className="text-xs text-green-500 font-semibold mt-1">캘리브레이션 완료</p>
-            )}
-
-            {postureStatus === "monitoring" && (
-              <p
-                className={`text-xs mt-1 font-semibold ${
-                  alertLevel === 0 ? "text-green-500" : alertLevel === 1 ? "text-red-500" : "text-yellow-500"
-                }`}
-              >
-                {alertLevel === 0 ? "자세 양호" : alertLevel === 1 ? "자세 이탈 감지" : "⚠️ 장시간 자세 이탈"}
-              </p>
-            )}
-          </div>
+          )}
         </div>
 
+        {/* status info */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--text-3)" }}>
+            <CameraIcon size={15} />
+            <span
+              style={{
+                fontSize: 11.5,
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                color: "var(--text-2)",
+              }}
+            >
+              Real-time Vision
+            </span>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 7 }}>
+            <span
+              style={{
+                position: "relative",
+                width: 7,
+                height: 7,
+                borderRadius: "50%",
+                background: status === "active" ? "var(--green)" : "var(--text-4)",
+                flexShrink: 0,
+              }}
+              className={status === "active" ? "vpm-dot-live" : ""}
+            />
+            <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>
+              {status === "active" ? "카메라 활성" : "시스템 대기 중"}
+            </span>
+            {isMonitoring && (
+              <span
+                style={{
+                  fontSize: 12.5,
+                  fontWeight: 600,
+                  color: postureColor,
+                  marginLeft: 6,
+                }}
+              >
+                · {postureText}
+              </span>
+            )}
+          </div>
+
+          {isCalibrating && (
+            <div style={{ marginTop: 9, maxWidth: 220 }}>
+              <div
+                style={{
+                  height: 5,
+                  borderRadius: 99,
+                  background: "var(--brand-soft)",
+                  border: "1px solid var(--border)",
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    width: `${calibProgress}%`,
+                    height: "100%",
+                    background: "var(--brand)",
+                    transition: "width 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                  }}
+                />
+              </div>
+              <p
+                style={{
+                  margin: "5px 0 0",
+                  fontSize: 11.5,
+                  color: "var(--text-3)",
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                캘리브레이션 {calibProgress}/100
+              </p>
+            </div>
+          )}
+
+          {postureStatus === "calibrated" && (
+            <p style={{ margin: "6px 0 0", fontSize: 12, color: "var(--green)", fontWeight: 600 }}>
+              캘리브레이션 완료
+            </p>
+          )}
+        </div>
+
+        {/* PiP button */}
         <button
           onClick={openPip}
-          className="bg-[#2663EB] text-white px-5 py-3 rounded-lg font-bold transition-colors duration-200 hover:bg-blue-700 cursor-pointer"
+          style={{
+            flexShrink: 0,
+            height: 38,
+            padding: "0 14px",
+            background: "var(--surface)",
+            color: "var(--text-2)",
+            border: "1px solid var(--border-strong)",
+            borderRadius: "var(--r-md)",
+            fontSize: 13.5,
+            fontWeight: 600,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: 7,
+            whiteSpace: "nowrap",
+            fontFamily: "inherit",
+            transition: "background 0.15s",
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface-2)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "var(--surface)"; }}
         >
-          ⧉ 미니 화면
+          <PipIcon /> 미니 화면
         </button>
       </div>
     </>
   );
 };
+
+function CameraIcon({ size = 20 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M16 8.5l4.5-2.3v11.6L16 15.5" />
+      <rect x="2.5" y="5.5" width="13.5" height="13" rx="2.5" />
+    </svg>
+  );
+}
+
+function PipIcon() {
+  return (
+    <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4.5" width="18" height="15" rx="2.5" />
+      <rect x="12" y="11" width="7" height="6" rx="1.4" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function AlertTriangleIcon({ size = 24 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3l9.5 16.5H2.5z" />
+      <line x1="12" y1="10" x2="12" y2="14" />
+      <circle cx="12" cy="17" r="0.6" fill="currentColor" />
+    </svg>
+  );
+}
