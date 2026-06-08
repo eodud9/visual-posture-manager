@@ -68,8 +68,7 @@ function Home() {
             Visual Posture Manager
           </h1>
           <p style={{ margin: "10px 0 0", fontSize: 14.5, lineHeight: 1.65, color: "var(--text-2)" }}>
-            웹캠으로 작업 중인 상체 자세를 실시간으로 인식하고, 기준 자세 대비 이탈을 감지하는
-            집중 관리 서비스입니다.
+            웹캠으로 작업 중인 상체 자세를 실시간으로 인식하고, 기준 자세 대비 이탈을 감지하는 집중 관리 서비스입니다.
           </p>
 
           {/* privacy notice */}
@@ -124,16 +123,11 @@ function Home() {
                 if (e.target.checked) setShowError(false);
               }}
               style={{
-                appearance: "none",
-                width: 19,
-                height: 19,
-                border: `1.6px solid ${isChecked ? "var(--brand)" : "var(--border-strong)"}`,
-                borderRadius: 6,
-                background: isChecked ? "var(--brand)" : "var(--surface)",
+                width: 18,
+                height: 18,
+                accentColor: "#3b5bdb",
                 cursor: "pointer",
-                position: "relative",
                 flexShrink: 0,
-                transition: "background 0.15s, border-color 0.15s",
               }}
             />
             <span
@@ -177,12 +171,14 @@ function Home() {
               fontWeight: 600,
               cursor: isChecked ? "pointer" : "not-allowed",
               transition: "background 0.15s",
-              boxShadow: isChecked
-                ? "0 1px 1px rgba(20,28,46,0.12), inset 0 1px 0 rgba(255,255,255,0.12)"
-                : "none",
+              boxShadow: isChecked ? "0 1px 1px rgba(20,28,46,0.12), inset 0 1px 0 rgba(255,255,255,0.12)" : "none",
             }}
-            onMouseEnter={(e) => { if (isChecked) e.currentTarget.style.background = "var(--brand-hover)"; }}
-            onMouseLeave={(e) => { if (isChecked) e.currentTarget.style.background = "var(--brand)"; }}
+            onMouseEnter={(e) => {
+              if (isChecked) e.currentTarget.style.background = "var(--brand-hover)";
+            }}
+            onMouseLeave={(e) => {
+              if (isChecked) e.currentTarget.style.background = "var(--brand)";
+            }}
           >
             시작하기
           </button>
@@ -197,14 +193,29 @@ function LogoIcon({ size = 22 }) {
     <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
       <rect x="3" y="3" width="18" height="18" rx="5" opacity="0.18" />
       <circle cx="12" cy="9.2" r="2.7" />
-      <path d="M6.5 18.5c0-3 2.5-5 5.5-5s5.5 2 5.5 5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path
+        d="M6.5 18.5c0-3 2.5-5 5.5-5s5.5 2 5.5 5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
 
 function ShieldIcon() {
   return (
-    <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width={17}
+      height={17}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M12 3l7 3v5c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6z" />
       <path d="M9 12l2 2 4-4" />
     </svg>
@@ -213,7 +224,16 @@ function ShieldIcon() {
 
 function CheckIcon() {
   return (
-    <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width={15}
+      height={15}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2.4}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <polyline points="20 6 9 17 4 12" />
     </svg>
   );
@@ -221,7 +241,16 @@ function CheckIcon() {
 
 function AlertIcon() {
   return (
-    <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width={14}
+      height={14}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M12 3l9.5 16.5H2.5z" />
       <line x1="12" y1="10" x2="12" y2="14" />
       <circle cx="12" cy="17" r="0.6" fill="currentColor" />
