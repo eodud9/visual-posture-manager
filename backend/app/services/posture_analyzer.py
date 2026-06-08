@@ -76,12 +76,21 @@ def analyze_posture(landmarks, calibration, state, timestamp_ms):
         state.deviation_frame_count += 1
         
         # 지속 시간에 따른 경고 단계 판정 (5초, 30초, 3분) [cite: 87, 88, 89, 1211]
-        if deviation_duration_ms >= 180000: # 3분
+        
+        # if deviation_duration_ms >= 180000: # 3분
+        #     warning_level, warning_type = 3, "MODAL_POPUP"
+        # elif deviation_duration_ms >= 30000: # 30초
+        #     warning_level, warning_type = 2, "PIP_YELLOW_SCREEN"
+        # elif deviation_duration_ms >= 5000: # 5초
+        #     warning_level, warning_type = 1, "PIP_RED_SCREEN"
+        
+        # 시연용
+        if deviation_duration_ms >= 15000:   # 15초
             warning_level, warning_type = 3, "MODAL_POPUP"
-        elif deviation_duration_ms >= 30000: # 30초
-            warning_level, warning_type = 2, "PIP_YELLOW_SCREEN"
-        elif deviation_duration_ms >= 5000: # 5초
-            warning_level, warning_type = 1, "PIP_RED_SCREEN"
+        elif deviation_duration_ms >= 10000: # 10초
+            warning_level, warning_type = 2, "AUDIO_ALERT"
+        elif deviation_duration_ms >= 5000:  # 5초
+            warning_level, warning_type = 1, "VISUAL_ALERT"
     else:
         pass
 

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, Cell, ResponsiveContainer } from "recharts";
 import { getSessionReport } from "../api/sessions";
 
 const TIMELINE_SLOTS = 30;
@@ -12,22 +11,26 @@ function formatMs(ms) {
   return m > 0 ? `${m}분 ${s}초` : `${s}초`;
 }
 
-function buildTimeline(segments, totalMs) {
+function buildTimeline(segments, totalMs, sessionStartMs) {
   if (totalMs <= 0) return Array(TIMELINE_SLOTS).fill(false);
   const slotMs = totalMs / TIMELINE_SLOTS;
   return Array.from({ length: TIMELINE_SLOTS }, (_, i) => {
     const slotStart = i * slotMs;
     const slotEnd = (i + 1) * slotMs;
-    return segments.some((seg) => seg.startTimeMs < slotEnd && seg.endTimeMs > slotStart);
+    return segments.some((seg) => {
+      const relStart = seg.startTimeMs - sessionStartMs;
+      const relEnd = seg.endTimeMs - sessionStartMs;
+      return relStart < slotEnd && relEnd > slotStart;
+    });
   });
 }
 
-function buildHistogram(segments, totalMs) {
+function buildHistogram(segments, totalMs, sessionStartMs) {
   const maxMinute = Math.max(1, Math.ceil(totalMs / 60000));
   const counts = Array(maxMinute).fill(0);
   segments.forEach((seg) => {
-    const m = Math.floor(seg.startTimeMs / 60000);
-    if (m < maxMinute) counts[m]++;
+    const m = Math.floor((seg.startTimeMs - sessionStartMs) / 60000);
+    if (m >= 0 && m < maxMinute) counts[m]++;
   });
   return counts.map((count, i) => ({ minute: i + 1, count }));
 }
@@ -52,10 +55,14 @@ export default function Report() {
       setLoading(false);
       return;
     }
-    getSessionReport(sessionId).then((data) => {
-      setReport(data);
-      setLoading(false);
-    });
+    getSessionReport(sessionId)
+      .then((data) => {
+        setReport(data);
+        setLoading(false);
+      })
+      .catch((e) => {
+        setLoading(false);
+      });
   }, [sessionId]);
 
   if (loading) {
@@ -80,9 +87,7 @@ export default function Report() {
   if (!report) {
     return (
       <div style={{ padding: 32, display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-        <p style={{ color: "var(--text-3)", fontSize: 14, textAlign: "center" }}>
-          리포트 데이터를 불러올 수 없습니다.
-        </p>
+        <p style={{ color: "var(--text-3)", fontSize: 14, textAlign: "center" }}>리포트 데이터를 불러올 수 없습니다.</p>
         <button
           onClick={() => navigate("/workspace")}
           style={{
@@ -104,12 +109,15 @@ export default function Report() {
     );
   }
 
-  const { totalSessionMs, deviationCount, segments } = report;
+  const { totalSessionMs, deviationCount, segments, sessionStartMs } = report;
   const deviationMs = segments.reduce((acc, s) => acc + (s.endTimeMs - s.startTimeMs), 0);
   const goodRatio = totalSessionMs > 0 ? Math.round(((totalSessionMs - deviationMs) / totalSessionMs) * 100) : 100;
 
-  const timeline = buildTimeline(segments, totalSessionMs);
-  const histData = buildHistogram(segments, totalSessionMs);
+  const timeline = buildTimeline(segments, totalSessionMs, sessionStartMs); // ← sessionStartMs 추가
+  const histData = buildHistogram(segments, totalSessionMs, sessionStartMs); // ← sessionStartMs 추가
+
+  const paddedHistData = histData.length < 2 ? [...histData, { minute: histData.length + 1, count: 0 }] : histData;
+
   const insight = getPeakInsight(histData);
   const today = new Date().toLocaleDateString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" });
 
@@ -181,8 +189,12 @@ export default function Report() {
             boxShadow: "0 1px 1px rgba(20,28,46,0.12), inset 0 1px 0 rgba(255,255,255,0.12)",
             transition: "background 0.15s",
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--brand-hover)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = "var(--brand)"; }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "var(--brand-hover)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "var(--brand)";
+          }}
         >
           <PlayIcon /> 새 세션 시작
         </button>
@@ -299,50 +311,37 @@ export default function Report() {
           >
             시간대별 이탈 분포
           </span>
-          <div style={{ flex: 1, minHeight: 150 }}>
-            <ResponsiveContainer width="100%" height={160}>
-              <BarChart data={histData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                <XAxis
-                  dataKey="minute"
-                  tick={{ fontSize: 11, fill: "var(--text-4)", fontFamily: "inherit" }}
-                  tickFormatter={(v) => `${v}m`}
-                  axisLine={{ stroke: "var(--border)" }}
-                  tickLine={false}
-                />
-                <YAxis
-                  allowDecimals={false}
-                  tick={{ fontSize: 11, fill: "var(--text-4)", fontFamily: "inherit" }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip
-                  formatter={(v) => [`${v}회`, "이탈"]}
-                  labelFormatter={(l) => `${l - 1}분~${l}분`}
-                  contentStyle={{
-                    background: "var(--surface)",
-                    border: "1px solid var(--border)",
-                    borderRadius: 8,
-                    fontSize: 12,
-                    fontFamily: "inherit",
-                    boxShadow: "var(--sh-sm)",
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 140, padding: "0 4px" }}>
+            {paddedHistData.map((entry, i) => {
+              const maxCount = Math.max(...paddedHistData.map((d) => d.count), 1);
+              const heightPct = entry.count === 0 ? 4 : (entry.count / maxCount) * 100;
+              return (
+                <div
+                  key={i}
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 4,
+                    height: "100%",
                   }}
-                />
-                <Bar dataKey="count" radius={[5, 5, 2, 2]}>
-                  {histData.map((entry, i) => (
-                    <Cell
-                      key={i}
-                      fill={
-                        entry.count >= 2
-                          ? "var(--red)"
-                          : entry.count === 1
-                            ? "var(--brand)"
-                            : "var(--border-strong)"
-                      }
+                >
+                  <div style={{ flex: 1, display: "flex", alignItems: "flex-end", width: "100%" }}>
+                    <div
+                      style={{
+                        width: "100%",
+                        height: `${heightPct}%`,
+                        background: entry.count >= 2 ? "#ef4444" : entry.count === 1 ? "#2563eb" : "#e2e5eb",
+                        borderRadius: "4px 4px 2px 2px",
+                        minHeight: 4,
+                      }}
                     />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+                  </div>
+                  <span style={{ fontSize: 10, color: "#8b93a3" }}>{entry.minute}m</span>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -419,9 +418,7 @@ function KpiCard({ icon, iconBg, iconColor, label, value, sub, bar, barColor }) 
         >
           {icon}
         </span>
-        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)", whiteSpace: "nowrap" }}>
-          {label}
-        </span>
+        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)", whiteSpace: "nowrap" }}>{label}</span>
       </div>
       <div
         style={{
@@ -498,7 +495,16 @@ function LegendItem({ color, label, hasBorder }) {
 
 function ClockIcon() {
   return (
-    <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width={17}
+      height={17}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <circle cx="12" cy="12" r="8.5" />
       <path d="M12 7.5V12l3 2" />
     </svg>
@@ -507,7 +513,16 @@ function ClockIcon() {
 
 function ShieldIcon() {
   return (
-    <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width={17}
+      height={17}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M12 3l7 3v5c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6z" />
       <path d="M9 12l2 2 4-4" />
     </svg>
@@ -516,7 +531,16 @@ function ShieldIcon() {
 
 function AlertIcon() {
   return (
-    <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width={17}
+      height={17}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M12 3l9.5 16.5H2.5z" />
       <line x1="12" y1="10" x2="12" y2="14" />
       <circle cx="12" cy="17" r="0.6" fill="currentColor" />
@@ -534,7 +558,16 @@ function PlayIcon() {
 
 function SparkIcon() {
   return (
-    <svg width={19} height={19} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width={19}
+      height={19}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1" />
     </svg>
   );

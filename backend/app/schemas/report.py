@@ -19,6 +19,7 @@ class DeviationDistributionItem(BaseModel):
 
 class SessionReportResponse(BaseModel):
     sessionId: int
+    sessionStartMs: int  # ← 추가
     totalSessionMs: int
     totalDeviationMs: int
     deviationCount: int

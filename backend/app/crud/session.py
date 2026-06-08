@@ -127,7 +127,7 @@ def end_session(db: Session, session_id: int):
 
     return session
 
-def build_deviation_distribution(segments, total_session_ms: int, bucket_size_ms: int = 60000):
+def build_deviation_distribution(segments, total_session_ms: int, session_start_ms: int, bucket_size_ms: int = 60000):
     if total_session_ms <= 0:
         return []
 
@@ -144,9 +144,13 @@ def build_deviation_distribution(segments, total_session_ms: int, bucket_size_ms
     ]
 
     for segment in segments:
+        # 절대 timestamp → 세션 상대 시간으로 변환
+        rel_start = segment.start_time_ms - session_start_ms
+        rel_end = segment.end_time_ms - session_start_ms
+
         for bucket in distribution:
-            overlap_start = max(segment.start_time_ms, bucket["bucketStartMs"])
-            overlap_end = min(segment.end_time_ms, bucket["bucketEndMs"])
+            overlap_start = max(rel_start, bucket["bucketStartMs"])
+            overlap_end = min(rel_end, bucket["bucketEndMs"])
 
             if overlap_start < overlap_end:
                 bucket["deviationCount"] += 1
@@ -186,6 +190,7 @@ def get_session_report(db: Session, session_id: int):
         total_session_ms = 0
 
     total_deviation_ms = sum(segment.duration_ms for segment in segments)
+    session_start_ms = int(session.started_at.replace(tzinfo=timezone.utc).timestamp() * 1000)
     deviation_count = len(segments)
 
     deviation_ratio = 0
@@ -195,11 +200,13 @@ def get_session_report(db: Session, session_id: int):
     deviation_distribution = build_deviation_distribution(
         segments=segments,
         total_session_ms=total_session_ms,
+        session_start_ms=session_start_ms,
         bucket_size_ms=60000
     )
 
     return {
         "sessionId": session.session_id,
+        "sessionStartMs": int(session.started_at.replace(tzinfo=timezone.utc).timestamp() * 1000),
         "totalSessionMs": total_session_ms,
         "totalDeviationMs": total_deviation_ms,
         "deviationCount": deviation_count,

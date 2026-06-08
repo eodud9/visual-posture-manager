@@ -28,7 +28,9 @@ export const WorkCam = ({
     const video = videoRef.current;
     if (!stream || !video) return;
     if (video.srcObject !== stream) video.srcObject = stream;
-    video.onloadedmetadata = () => { video.play().catch(() => {}); };
+    video.onloadedmetadata = () => {
+      video.play().catch(() => {});
+    };
   }, [stream]);
 
   const status = stream ? "active" : "loading";
@@ -40,7 +42,6 @@ export const WorkCam = ({
     setCalibrationPhase,
     sessionId,
     setCalibrationId,
-    calibrationId,
   );
 
   useEffect(() => {
@@ -54,33 +55,13 @@ export const WorkCam = ({
   const isCalibrating = postureStatus === "calibrating";
 
   /* border color based on alert */
-  const borderColor =
-    alertLevel === 1
-      ? "var(--red)"
-      : alertLevel >= 2
-        ? "var(--amber)"
-        : "var(--border)";
+  const borderColor = alertLevel === 1 ? "var(--red)" : alertLevel >= 2 ? "var(--amber)" : "var(--border)";
 
-  const cardBg =
-    alertLevel === 1
-      ? "var(--red-soft)"
-      : alertLevel >= 2
-        ? "var(--amber-soft)"
-        : "var(--surface)";
+  const cardBg = alertLevel === 1 ? "var(--red-soft)" : alertLevel >= 2 ? "var(--amber-soft)" : "var(--surface)";
 
-  const postureText =
-    alertLevel === 0
-      ? "자세 양호"
-      : alertLevel === 1
-        ? "자세 이탈 감지"
-        : "장시간 자세 이탈";
+  const postureText = alertLevel === 0 ? "자세 양호" : alertLevel === 1 ? "자세 이탈 감지" : "장시간 자세 이탈";
 
-  const postureColor =
-    alertLevel === 0
-      ? "var(--green)"
-      : alertLevel === 1
-        ? "var(--red)"
-        : "var(--amber)";
+  const postureColor = alertLevel === 0 ? "var(--green)" : alertLevel === 1 ? "var(--red)" : "var(--amber)";
 
   return (
     <>
@@ -134,7 +115,7 @@ export const WorkCam = ({
             </h2>
 
             <p style={{ margin: 0, fontSize: 13.5, color: "var(--text-2)", textAlign: "center", lineHeight: 1.65 }}>
-              3분 이상 자세가 틀어진 상태입니다.
+              15초 이상 자세가 틀어진 상태입니다.
               <br />
               잠시 스트레칭 후 바른 자세로 앉아주세요.
             </p>
@@ -155,8 +136,12 @@ export const WorkCam = ({
                 fontFamily: "inherit",
                 transition: "background 0.15s",
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--brand-hover)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "var(--brand)"; }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "var(--brand-hover)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "var(--brand)";
+              }}
             >
               확인
             </button>
@@ -191,9 +176,17 @@ export const WorkCam = ({
           }}
         >
           {status === "active" ? (
-            <video ref={videoRef} autoPlay playsInline muted style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
           ) : (
-            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div
+              style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}
+            >
               <CameraIcon />
             </div>
           )}
@@ -279,9 +272,7 @@ export const WorkCam = ({
           )}
 
           {postureStatus === "calibrated" && (
-            <p style={{ margin: "6px 0 0", fontSize: 12, color: "var(--green)", fontWeight: 600 }}>
-              캘리브레이션 완료
-            </p>
+            <p style={{ margin: "6px 0 0", fontSize: 12, color: "var(--green)", fontWeight: 600 }}>캘리브레이션 완료</p>
           )}
         </div>
 
@@ -306,8 +297,12 @@ export const WorkCam = ({
             fontFamily: "inherit",
             transition: "background 0.15s",
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface-2)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = "var(--surface)"; }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "var(--surface-2)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "var(--surface)";
+          }}
         >
           <PipIcon /> 미니 화면
         </button>
@@ -318,7 +313,16 @@ export const WorkCam = ({
 
 function CameraIcon({ size = 20 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="white"
+      strokeWidth={1.6}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M16 8.5l4.5-2.3v11.6L16 15.5" />
       <rect x="2.5" y="5.5" width="13.5" height="13" rx="2.5" />
     </svg>
@@ -327,7 +331,16 @@ function CameraIcon({ size = 20 }) {
 
 function PipIcon() {
   return (
-    <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width={16}
+      height={16}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <rect x="3" y="4.5" width="18" height="15" rx="2.5" />
       <rect x="12" y="11" width="7" height="6" rx="1.4" fill="currentColor" stroke="none" />
     </svg>
@@ -336,7 +349,16 @@ function PipIcon() {
 
 function AlertTriangleIcon({ size = 24 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M12 3l9.5 16.5H2.5z" />
       <line x1="12" y1="10" x2="12" y2="14" />
       <circle cx="12" cy="17" r="0.6" fill="currentColor" />

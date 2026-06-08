@@ -5,9 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL", "").replace(
-    "mysql://", "mysql+pymysql://"
-)
+DATABASE_URL = os.getenv("DATABASE_URL", "")
 
 if DATABASE_URL is None:
     raise ValueError("DATABASE_URL 환경 변수가 설정되지 않았습니다. .env 파일을 확인하세요.")

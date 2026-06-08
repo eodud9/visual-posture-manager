@@ -155,6 +155,18 @@ async def posture_websocket(
             )
             create_posture_logs(db, session_id, log_body)
 
+            await websocket.send_json({
+                "type": "analysis_result",
+                "timestampMs": timestamp_ms,
+                "emaScore": round(result["emaScore"], 4),
+                "mdScore": round(result["mdScore"], 4),
+                "isOutlier": result["isOutlier"],
+                "warningLevel": result["warningLevel"],
+                "warningType": result["warningType"],
+                "deviationDurationMs": result.get("deviationDurationMs", 0),
+                "threshold": result["threshold"]
+            })
+
             # 이탈 시작 시 deviation_segment 최초 생성
             if result["isOutlier"] and state.current_segment_id is None:
                 initial_end_time_ms = timestamp_ms

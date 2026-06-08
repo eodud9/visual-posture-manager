@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Float, String, DateTime, ForeignKey
+from sqlalchemy import Column, BigInteger, Integer, Float, String, DateTime, ForeignKey
 from datetime import datetime
 from app.database import Base
 
@@ -10,9 +10,9 @@ class DeviationSegment(Base):
     session_id = Column(Integer, ForeignKey("sessions.session_id"), nullable = False)
     calibration_id = Column(Integer, ForeignKey("calibrations.calibration_id"), nullable = False)
 
-    start_time_ms = Column(Integer, nullable = False)
-    end_time_ms = Column(Integer, nullable = False)
-    duration_ms = Column(Integer, nullable = False)
+    start_time_ms = Column(BigInteger, nullable = False)
+    end_time_ms = Column(BigInteger, nullable = False)
+    duration_ms = Column(BigInteger, nullable = False)
 
     max_ema_score = Column(Float, nullable = False)
     avg_ema_score = Column(Float, nullable = False)

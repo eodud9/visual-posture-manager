@@ -3,10 +3,12 @@ import { startSession, endSession, pauseSession, resumeSession } from "../../api
 import { useNavigate } from "react-router-dom";
 
 const DEFAULT_SESSION_COUNTS = [1, 2, 3];
-const DEFAULT_DURATIONS = ["10:00", "25:00", "50:00", "75:00"];
+const DEFAULT_DURATIONS = ["1:00", "10:00", "25:00", "50:00", "75:00"];
 
 const formatTime = (seconds) => {
-  const m = Math.floor(seconds / 60).toString().padStart(2, "0");
+  const m = Math.floor(seconds / 60)
+    .toString()
+    .padStart(2, "0");
   const s = (seconds % 60).toString().padStart(2, "0");
   return `${m}:${s}`;
 };
@@ -163,9 +165,13 @@ export const WorkTimer = ({
   useEffect(() => {
     if (!allDone) return;
     sessionCreatingRef.current = false;
-    setCalibrationPhase("idle");
     if (sessionId) {
-      endSession(sessionId).then(() => navigate("/report", { state: { sessionId } }));
+      endSession(sessionId).then(() => {
+        setCalibrationPhase("idle"); // ← navigate 직전으로 이동
+        navigate("/report", { state: { sessionId } });
+      });
+    } else {
+      setCalibrationPhase("idle");
     }
   }, [allDone]);
 
@@ -218,15 +224,16 @@ export const WorkTimer = ({
             ? "분석 준비 중"
             : "준비 완료";
 
-  const statusColor = allDone || waitingNextSession
-    ? "var(--green)"
-    : completedSession !== null
-      ? "var(--brand)"
-      : isRunning
-        ? "var(--green)"
-        : calibrationPhase === "calibrating"
-          ? "var(--text-3)"
-          : "var(--text-3)";
+  const statusColor =
+    allDone || waitingNextSession
+      ? "var(--green)"
+      : completedSession !== null
+        ? "var(--brand)"
+        : isRunning
+          ? "var(--green)"
+          : calibrationPhase === "calibrating"
+            ? "var(--text-3)"
+            : "var(--text-3)";
 
   const isActive = calibrationPhase === "running" || calibrationPhase === "calibrating";
 
@@ -276,7 +283,9 @@ export const WorkTimer = ({
             }}
           >
             {sessionCounts.map((count) => (
-              <option key={count} value={count}>{count}회</option>
+              <option key={count} value={count}>
+                {count}회
+              </option>
             ))}
           </select>
         </label>
@@ -304,7 +313,9 @@ export const WorkTimer = ({
             }}
           >
             {durations.map((d) => (
-              <option key={d} value={d}>{d}</option>
+              <option key={d} value={d}>
+                {d}
+              </option>
             ))}
           </select>
         </label>
@@ -312,12 +323,7 @@ export const WorkTimer = ({
 
       {/* progress ring */}
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 6 }}>
-        <ProgressRing
-          progress={progress}
-          timeLeft={timeLeft}
-          statusLabel={statusLabel}
-          statusColor={statusColor}
-        />
+        <ProgressRing progress={progress} timeLeft={timeLeft} statusLabel={statusLabel} statusColor={statusColor} />
         <p
           style={{
             margin: "14px 0 0",
@@ -367,9 +373,10 @@ export const WorkTimer = ({
             justifyContent: "center",
             gap: 8,
             transition: "background 0.15s",
-            boxShadow: calibrationPhase === "calibrating"
-              ? "none"
-              : "0 1px 1px rgba(20,28,46,0.12), inset 0 1px 0 rgba(255,255,255,0.12)",
+            boxShadow:
+              calibrationPhase === "calibrating"
+                ? "none"
+                : "0 1px 1px rgba(20,28,46,0.12), inset 0 1px 0 rgba(255,255,255,0.12)",
             fontFamily: "inherit",
           }}
           onMouseEnter={(e) => {
@@ -400,8 +407,12 @@ export const WorkTimer = ({
               fontFamily: "inherit",
               transition: "background 0.15s",
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = "var(--surface-2)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "var(--surface)"; }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "var(--surface-2)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "var(--surface)";
+            }}
           >
             리포트 보기
           </button>

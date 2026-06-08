@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Float, String, DateTime, ForeignKey
+from sqlalchemy import Column, BigInteger, Integer, Float, String, DateTime, ForeignKey
 from datetime import datetime
 from app.database import Base
 
@@ -12,8 +12,8 @@ class Alert(Base):
 
     warning_level = Column(Integer, nullable = False)
 
-    triggered_at_ms = Column(Integer, nullable = False)
-    deviation_duration_ms = Column(Integer, nullable = False)
+    triggered_at_ms = Column(BigInteger, nullable = False)
+    deviation_duration_ms = Column(BigInteger, nullable = False)
 
     ema_score = Column(Float, nullable = False)
     threshold = Column(Float, nullable = False)
