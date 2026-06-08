@@ -18,10 +18,7 @@ function Home() {
     <div style={{ minHeight: "100%", display: "flex", flexDirection: "column", background: "var(--bg)" }}>
       {/* slim top bar */}
       <div style={{ height: "var(--header-h)", display: "flex", alignItems: "center", gap: 9, padding: "0 26px" }}>
-        <span style={{ color: "var(--brand)", display: "flex" }}>
-          <LogoIcon />
-        </span>
-        <span style={{ fontWeight: 700, fontSize: 14.5, letterSpacing: "-0.02em", color: "var(--text)" }}>
+        <span style={{ fontWeight: 700, fontSize: 25, letterSpacing: "-0.02em", color: "#3B5BDB" }}>
           Visual Posture Manager
         </span>
       </div>
@@ -47,24 +44,7 @@ function Home() {
             padding: "40px 40px 32px",
           }}
         >
-          {/* icon */}
-          <div
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 13,
-              background: "var(--brand-soft)",
-              color: "var(--brand)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: 22,
-            }}
-          >
-            <LogoIcon size={26} />
-          </div>
-
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: "-0.03em", color: "var(--text)" }}>
+          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: "-0.03em", color: "#3B5BDB" }}>
             Visual Posture Manager
           </h1>
           <p style={{ margin: "10px 0 0", fontSize: 14.5, lineHeight: 1.65, color: "var(--text-2)" }}>
@@ -128,6 +108,7 @@ function Home() {
                 accentColor: "#3b5bdb",
                 cursor: "pointer",
                 flexShrink: 0,
+                border: "none",
               }}
             />
             <span
