@@ -118,7 +118,9 @@ export const usePoseDetection = (
     console.log("[WS Effect]", { calibrationPhase, sessionId });
     if (calibrationPhase !== "running" || !sessionId) return;
 
-    const ws = new WebSocket(`ws://localhost:8000/ws/sessions/${sessionId}/posture`);
+    const ws = new WebSocket(
+      `${import.meta.env.VITE_WS_URL || "ws://localhost:8000"}/ws/sessions/${sessionId}/posture`,
+    );
 
     ws.onopen = () => console.log("[WS] 백엔드 연결됨");
     ws.onmessage = (e) => handleWsResultRef.current(JSON.parse(e.data));
