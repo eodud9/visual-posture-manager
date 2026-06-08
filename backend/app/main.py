@@ -17,6 +17,10 @@ from app.routers import feedback
 from app.routers import posture_ws
 from app.routers import health
 
+origins = [
+    "http://localhost:5173",
+    "https://visual-posture-manager.vercel.app",
+]
 
 # DB 테이블 생성
 Base.metadata.create_all(bind=engine)
@@ -31,7 +35,7 @@ app = FastAPI(
 # ✅ CORS 설정
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
